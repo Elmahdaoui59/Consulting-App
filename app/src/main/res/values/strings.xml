@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">Consulting</string>
+    <string name="password_requirements_characters">At least 8 characters</string>
+    <string name="password_requirements_capital">At least 1 capital</string>
+    <string name="password_requirements_digit">At least 1 digit</string>
+    <string name="label_sign_In">Sign In</string>
+    <string name="label_sign_Up">Join Now</string>
+    <string name="label_email">Email Address</string>
+    <string name="label_successful_registration">Verification email send!!, Verify your account to sign In</string>
+    <string name="label_email_verification_request">Please Verify ou email</string>
+    <string name="label_successful_sign_In">You are signed In Successfully!!</string>
+    <string name="label_password">Password</string>
+    <string name="show_password">Show Password</string>
+    <string name="hide_password">Hide Password</string>
+    <string name="action_need_account">Need an account?</string>
+    <string name="action_already_have_an_account">Already have an account?</string>
+    <string name="error_title">Oops</string>
+    <string name="error_button_text">Ok</string>
+    <string name="confirm_dialog_button_text">Confirm</string>
+    <string name="cancel_dialog_button_text">Cancel</string>
+    <string name="resend_verification_email_button">Resend verification email</string>
+    <string name="confirm_dialog_title">Confirm email and password</string>
+</resources>

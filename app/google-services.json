@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "33153500290",
+    "project_id": "consulting-41036",
+    "storage_bucket": "consulting-41036.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:33153500290:android:9d62dc82ff28b0cad1609b",
+        "android_client_info": {
+          "package_name": "com.eldebvs.consulting"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "33153500290-nsj548ek1smepg6le603ca8oeg0tcim6.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDqiybFZUe8jEH46ttCvCvBCoUSNXyjA5M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "33153500290-nsj548ek1smepg6le603ca8oeg0tcim6.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
