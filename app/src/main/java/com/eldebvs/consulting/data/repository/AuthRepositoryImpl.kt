@@ -2,6 +2,8 @@ package com.eldebvs.consulting.data.repository
 
 import com.eldebvs.consulting.domain.model.Response
 import com.eldebvs.consulting.domain.repository.AuthRepository
+import com.google.firebase.auth.AuthCredential
+import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -66,6 +68,28 @@ class AuthRepositoryImpl @Inject constructor(
         auth.addAuthStateListener(authStateListener)
         awaitClose {
             auth.removeAuthStateListener(authStateListener)
+        }
+    }
+
+    override suspend fun resendVerificationEmail(
+        email: String,
+        password: String
+    ): Flow<Response<Boolean>> = flow {
+        try {
+            emit(Response.Loading)
+            val credential: AuthCredential = EmailAuthProvider.getCredential(email, password)
+            auth.signInWithCredential(credential).await().run {
+                this?.let {
+                    this.user?.apply {
+                        sendEmailVerification().await().run {
+                            signOutUser()
+                            emit(Response.Success(true))
+                        }
+                    }
+                }
+            }
+        } catch (e: Exception) {
+            emit(Response.Failure(e))
         }
     }
 }

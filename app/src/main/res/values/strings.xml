@@ -20,4 +20,6 @@
     <string name="cancel_dialog_button_text">Cancel</string>
     <string name="resend_verification_email_button">Resend verification email</string>
     <string name="confirm_dialog_title">Confirm email and password</string>
+    <string name="label_true">True</string>
+    <string name="label_false">False</string>
 </resources>

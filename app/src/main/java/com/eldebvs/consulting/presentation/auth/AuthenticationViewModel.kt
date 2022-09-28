@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.eldebvs.consulting.R
 import com.eldebvs.consulting.domain.model.Response
 import com.eldebvs.consulting.domain.use_case.auth_use_case.AuthUseCases
+import com.eldebvs.consulting.domain.use_case.auth_use_case.SignOutUser
+import com.eldebvs.consulting.presentation.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -21,20 +23,19 @@ class AuthenticationViewModel @Inject constructor(
     private val _eventFlow = MutableSharedFlow<UiEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
 
-    init {
-      getAuthState()
-    }
+
     private fun getAuthState() {
         viewModelScope.launch {
-            authUseCases.getAuthState.invoke().collect{ state ->
-                _uiState.update {
-                    it.copy(
-                        isUserAuthenticated = state
-                    )
+            authUseCases.getAuthState.invoke().collect { response ->
+                if(response) {
+                    _eventFlow.emit(UiEvent.Navigate(Screen.SignedInScreen.route))
+                } else {
+                    _eventFlow.emit(UiEvent.Navigate(Screen.AuthScreen.route))
                 }
             }
         }
     }
+
     private fun registerUser() {
         viewModelScope.launch(Dispatchers.IO) {
             authUseCases.registerUser(
@@ -52,6 +53,7 @@ class AuthenticationViewModel @Inject constructor(
                         }
                         _eventFlow.emit(UiEvent.ShowMessage(messLabel = R.string.label_successful_registration))
                         toggleAuthenticationMode()
+                        signOutUser()
                     }
                     is Response.Failure -> {
                         _uiState.update {
@@ -68,8 +70,9 @@ class AuthenticationViewModel @Inject constructor(
                             )
                         }
                     }
+
                 }
-                signOutUser()
+
             }
         }
     }
@@ -90,9 +93,9 @@ class AuthenticationViewModel @Inject constructor(
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
-                                isUserAuthenticated = false
                             )
                         }
+                        getAuthState()
                     }
                     is Response.Loading -> {
                         _uiState.update {
@@ -109,7 +112,7 @@ class AuthenticationViewModel @Inject constructor(
     private fun signInUser(email: String, password: String) {
         viewModelScope.launch(Dispatchers.IO) {
             authUseCases.signInUser(email, password).collect { response ->
-                when(response) {
+                when (response) {
                     is Response.Failure -> {
                         _uiState.update {
                             it.copy(
@@ -122,15 +125,11 @@ class AuthenticationViewModel @Inject constructor(
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
-                            )
+                                email = "",
+                                password = ""
+                                )
                         }
                         getAuthState()
-                        if (uiState.value.isUserAuthenticated) {
-                            _eventFlow.emit(UiEvent.ShowMessage(messLabel = R.string.label_successful_sign_In))
-                        } else {
-                            _eventFlow.emit(UiEvent.ShowMessage(messLabel = R.string.label_email_verification_request))
-                            signOutUser()
-                        }
                     }
                     is Response.Loading -> {
                         _uiState.update {
@@ -195,6 +194,42 @@ class AuthenticationViewModel @Inject constructor(
         }
     }
 
+    private fun resendVerificationEmail(email: String, password: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            authUseCases.resendVerificationEmail(email, password).collect { response ->
+                when (response) {
+                    is Response.Loading -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = true
+                            )
+                        }
+                    }
+                    is Response.Failure -> {
+                        _uiState.update {
+                            it.copy(
+                                error = response.e.message,
+                                isLoading = false
+                            )
+                        }
+                    }
+                    is Response.Success -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                email = "",
+                                password = ""
+                            )
+                        }
+                        toggleResendEmailDialogVisibility()
+                        _eventFlow.emit(UiEvent.ShowMessage(R.string.label_successful_registration))
+                    }
+                }
+
+            }
+        }
+    }
+
     fun handleEvent(authenticationEvent: AuthenticationEvent) {
         when (authenticationEvent) {
             is AuthenticationEvent.ToggleAuthenticationMode -> {
@@ -216,17 +251,33 @@ class AuthenticationViewModel @Inject constructor(
             is AuthenticationEvent.ErrorDismissed -> {
                 dismissError()
             }
-            is AuthenticationEvent.ToggleResetEmailDialogVisiblity -> {
-                _uiState.update {
-                    it.copy(
-                        showResetEmailDialog = !uiState.value.showResetEmailDialog
-                    )
-                }
+            is AuthenticationEvent.ToggleResendEmailDialogVisibility -> {
+                toggleResendEmailDialogVisibility()
+            }
+            is AuthenticationEvent.ResendVerificationEmail -> {
+                resendVerificationEmail(uiState.value.email!!, uiState.value.password!!)
+            }
+            is AuthenticationEvent.SignOutUser -> {
+                signOutUser()
+            }
+            is AuthenticationEvent.RefreshAuthState -> {
+                getAuthState()
             }
         }
     }
 
-    sealed class UiEvent(){
-        data class ShowMessage(val messLabel: Int): UiEvent()
+    private fun toggleResendEmailDialogVisibility() {
+        _uiState.update {
+            it.copy(
+                showResendEmailDialog = !uiState.value.showResendEmailDialog,
+                email = "",
+                password = ""
+            )
+        }
+    }
+
+    sealed class UiEvent() {
+        data class ShowMessage(val messLabel: Int) : UiEvent()
+        data class Navigate(val route: String): UiEvent()
     }
 }

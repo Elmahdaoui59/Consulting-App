@@ -16,9 +16,9 @@ fun AuthenticationContent(
     authenticationState: AuthenticationState,
     handleEvent: (event: AuthenticationEvent) -> Unit
 ) {
-    if (authenticationState.showResetEmailDialog) {
+    if (authenticationState.showResendEmailDialog) {
         ConfirmEmailDialog(
-            onDismiss = { handleEvent(AuthenticationEvent.ToggleResetEmailDialogVisiblity) },
+            onDismiss = { handleEvent(AuthenticationEvent.ToggleResendEmailDialogVisibility) },
             onEmailChanged = {
                 handleEvent(AuthenticationEvent.EmailChanged(it))
             },
@@ -28,6 +28,7 @@ fun AuthenticationContent(
             email =authenticationState.email,
             password =authenticationState.password
         ) {
+            handleEvent(AuthenticationEvent.ResendVerificationEmail)
         }
     }
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -52,7 +53,7 @@ fun AuthenticationContent(
                 passwordSatisfiedRequirement = authenticationState.passwordRequirements,
                 onAuthenticate = { handleEvent(AuthenticationEvent.Authenticate) },
                 enableAuthentication = authenticationState.isFormValid(),
-                onShowResetEmailChanged = { handleEvent(AuthenticationEvent.ToggleResetEmailDialogVisiblity) }
+                onShowResetEmailChanged = { handleEvent(AuthenticationEvent.ToggleResendEmailDialogVisibility) }
             )
             authenticationState.error?.let {
                 AuthenticationErrorDialog(error = it) {

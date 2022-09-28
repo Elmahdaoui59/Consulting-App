@@ -1,31 +1,67 @@
 package com.eldebvs.consulting
 
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
-import com.eldebvs.consulting.presentation.auth.NavGraphs
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.rememberNavController
+import com.eldebvs.consulting.presentation.auth.AuthenticationEvent
+import com.eldebvs.consulting.presentation.auth.AuthenticationViewModel
+import com.eldebvs.consulting.presentation.navigation.Screen
+import com.eldebvs.consulting.presentation.navigation.SetupNavGraph
 import com.eldebvs.consulting.ui.theme.ConsultingTheme
-import com.ramcosta.composedestinations.DestinationsNavHost
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.collectLatest
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    lateinit var navController: NavHostController
+    lateinit var authViewModel: AuthenticationViewModel
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
         setContent {
             ConsultingTheme {
-                // A surface container using the 'background' color from the theme
+
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colors.background
                 ) {
-                    DestinationsNavHost(navGraph = NavGraphs.root)
+                    navController = rememberNavController()
+                    authViewModel = hiltViewModel()
+                    refreshAuthState()
+                    SetupNavGraph(
+                        navController = navController,
+                        authViewModel = authViewModel
+                    )
+                    LaunchedEffect(key1 = true) {
+                        authViewModel.eventFlow.collectLatest { event ->
+                            when(event) {
+                                is AuthenticationViewModel.UiEvent.ShowMessage -> {
+                                    Toast.makeText(this@MainActivity, getString(event.messLabel), Toast.LENGTH_SHORT)
+                                        .show()
+                                }
+                                is AuthenticationViewModel.UiEvent.Navigate -> {
+                                    navController.navigate(route = event.route)
+                                    navController.clearBackStack(route = Screen.SignedInScreen.route)
+                                }
+                            }
+
+                        }
+                    }
                 }
             }
         }
+    }
+    private fun refreshAuthState() {
+        authViewModel.handleEvent(AuthenticationEvent.RefreshAuthState)
     }
 }

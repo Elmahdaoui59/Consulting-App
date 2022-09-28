@@ -6,5 +6,8 @@ sealed class AuthenticationEvent {
     class PasswordChanged(val password: String): AuthenticationEvent()
     object Authenticate: AuthenticationEvent()
     object ErrorDismissed: AuthenticationEvent()
-    object ToggleResetEmailDialogVisiblity: AuthenticationEvent()
+    object ToggleResendEmailDialogVisibility: AuthenticationEvent()
+    object ResendVerificationEmail: AuthenticationEvent()
+    object SignOutUser: AuthenticationEvent()
+    object RefreshAuthState: AuthenticationEvent()
 }

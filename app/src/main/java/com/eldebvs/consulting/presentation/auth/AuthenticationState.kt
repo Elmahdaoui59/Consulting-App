@@ -2,7 +2,6 @@ package com.eldebvs.consulting.presentation.auth
 
 import androidx.annotation.StringRes
 import com.eldebvs.consulting.R
-import com.eldebvs.consulting.domain.model.Response
 
 data class AuthenticationState(
     val email: String? = null,
@@ -11,8 +10,8 @@ data class AuthenticationState(
     val error: String? = null,
     val passwordRequirements: List<PasswordRequirement> = emptyList(),
     val authenticationMode: AuthenticationMode = AuthenticationMode.SIGN_IN,
-    val isUserAuthenticated: Boolean = false,
-    val showResetEmailDialog: Boolean = false
+    val isUserAuthenticated: Boolean? = null,
+    val showResendEmailDialog: Boolean = false
 ) {
     fun isFormValid(): Boolean? {
         return password?.isNotEmpty() == true
