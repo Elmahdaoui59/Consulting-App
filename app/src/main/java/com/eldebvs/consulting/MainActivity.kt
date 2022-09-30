@@ -4,12 +4,14 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
@@ -44,11 +46,16 @@ class MainActivity : ComponentActivity() {
                         navController = navController,
                         authViewModel = authViewModel
                     )
+
                     LaunchedEffect(key1 = true) {
                         authViewModel.eventFlow.collectLatest { event ->
-                            when(event) {
+                            when (event) {
                                 is AuthenticationViewModel.UiEvent.ShowMessage -> {
-                                    Toast.makeText(this@MainActivity, getString(event.messLabel), Toast.LENGTH_SHORT)
+                                    Toast.makeText(
+                                        this@MainActivity,
+                                        getString(event.messLabel),
+                                        Toast.LENGTH_SHORT
+                                    )
                                         .show()
                                 }
                                 is AuthenticationViewModel.UiEvent.Navigate -> {
@@ -64,13 +71,19 @@ class MainActivity : ComponentActivity() {
                             }
                         }
                     }
+
                     uiState.error?.let {
                         AuthenticationErrorDialog(error = it) {
                             authViewModel.handleEvent(AuthenticationEvent.ErrorDismissed)
                         }
                     }
                     if (uiState.isLoading) {
-                        CircularProgressIndicator()
+                        Box(
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            CircularProgressIndicator()
+                        }
                     }
                 }
             }
