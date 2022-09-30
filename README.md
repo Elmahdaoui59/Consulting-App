@@ -1,5 +1,6 @@
 #### Consulting-App
 ============================================================================
+
 ###Introduction
 A training project build as part of a course about Firebase on Android:  User Email Authentication and Verification. on pluralsight.
 this is my version of of the app Mitch tabian build on Pluralsight course on 2018, Except I'm writting it on Jetpack Compose and I'm using new android tecnologies as: 
