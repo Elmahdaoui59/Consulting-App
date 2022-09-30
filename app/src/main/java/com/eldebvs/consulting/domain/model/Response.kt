@@ -6,6 +6,6 @@ sealed class Response<out T> {
         val data : T
     ): Response<T>()
     data class Failure(
-        val e: java.lang.Exception
+        val e: Throwable
     ): Response<Nothing>()
 }

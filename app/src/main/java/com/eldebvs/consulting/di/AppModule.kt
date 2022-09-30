@@ -23,7 +23,11 @@ object AppModule {
         signOutUser = SignOutUser(repository),
         signInUser = SignInUser(repository),
         getAuthState = GetAuthState(repository),
-        resendVerificationEmail = ResendVerificationEmail(repository)
+        resendVerificationEmail = ResendVerificationEmail(repository),
+        getUserDetails = GetUserDetails(repository),
+        setUserDetails = SetUserDetails(repository),
+        resetUserPassword = ResetUserPassword(repository),
+        editUserEmail = EditUserEmail(repository)
     )
 
     @Provides

@@ -22,4 +22,9 @@
     <string name="confirm_dialog_title">Confirm email and password</string>
     <string name="label_true">True</string>
     <string name="label_false">False</string>
+    <string name="label_account_settings">Account Settings</string>
+    <string name="reset_password">Reset Password</string>
+    <string name="label_reset_password_link_send">A reset link send to your inbox</string>
+    <string name="label_reset_your_email">Reset your Email</string>
+    <string name="label_save_button_text">Save</string>
 </resources>

@@ -5,8 +5,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navOptions
-import com.eldebvs.consulting.presentation.auth.AuthenticationScreen
-import com.eldebvs.consulting.presentation.auth.AuthenticationViewModel
+import com.eldebvs.consulting.presentation.auth.*
 import com.eldebvs.consulting.presentation.user.SignedInScreen
 
 @Composable
@@ -27,7 +26,12 @@ fun SetupNavGraph(
         composable(
             route = Screen.SignedInScreen.route
         ) {
-            SignedInScreen(authViewModel)
+            SignedInScreen(navController, authViewModel)
+        }
+        composable(
+            route = Screen.SettingAccountScreen.route
+        ) {
+            SettingAccountScreen(authViewModel = authViewModel)
         }
     }
 

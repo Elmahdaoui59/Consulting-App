@@ -25,43 +25,36 @@ fun AuthenticationContent(
             onPasswordChanged = {
                 handleEvent(AuthenticationEvent.PasswordChanged(it))
             },
-            email =authenticationState.email,
-            password =authenticationState.password
+            email = authenticationState.email,
+            password = authenticationState.password
         ) {
             handleEvent(AuthenticationEvent.ResendVerificationEmail)
         }
     }
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        if (authenticationState.isLoading) {
-            CircularProgressIndicator()
-        } else {
-            AuthenticationForm(
-                authenticationMode = authenticationState.authenticationMode,
-                email = authenticationState.email,
-                password = authenticationState.password,
-                onEmailChanged = {
-                    handleEvent(AuthenticationEvent.EmailChanged(it))
-                },
-                onPasswordChanged = {
-                    handleEvent(
-                        AuthenticationEvent.PasswordChanged(
-                            it
-                        )
-                    )
-                },
-                onToggleAthMode = { handleEvent(AuthenticationEvent.ToggleAuthenticationMode) },
-                passwordSatisfiedRequirement = authenticationState.passwordRequirements,
-                onAuthenticate = { handleEvent(AuthenticationEvent.Authenticate) },
-                enableAuthentication = authenticationState.isFormValid(),
-                onShowResetEmailChanged = { handleEvent(AuthenticationEvent.ToggleResendEmailDialogVisibility) }
-            )
-            authenticationState.error?.let {
-                AuthenticationErrorDialog(error = it) {
-                    handleEvent(AuthenticationEvent.ErrorDismissed)
-                }
-            }
 
-        }
+        AuthenticationForm(
+            authenticationMode = authenticationState.authenticationMode,
+            email = authenticationState.email,
+            password = authenticationState.password,
+            onEmailChanged = {
+                handleEvent(AuthenticationEvent.EmailChanged(it))
+            },
+            onPasswordChanged = {
+                handleEvent(
+                    AuthenticationEvent.PasswordChanged(
+                        it
+                    )
+                )
+            },
+            onToggleAthMode = { handleEvent(AuthenticationEvent.ToggleAuthenticationMode) },
+            passwordSatisfiedRequirement = authenticationState.passwordRequirements,
+            onAuthenticate = { handleEvent(AuthenticationEvent.Authenticate) },
+            enableAuthentication = authenticationState.isFormValid(),
+            onShowResetEmailChanged = { handleEvent(AuthenticationEvent.ToggleResendEmailDialogVisibility) }
+        )
+
+
     }
 
 

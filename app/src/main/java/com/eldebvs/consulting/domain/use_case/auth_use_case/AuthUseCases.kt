@@ -5,5 +5,9 @@ data class AuthUseCases(
     val signOutUser: SignOutUser,
     val signInUser: SignInUser,
     val getAuthState: GetAuthState,
-    val resendVerificationEmail: ResendVerificationEmail
+    val resendVerificationEmail: ResendVerificationEmail,
+    val getUserDetails: GetUserDetails,
+    val setUserDetails: SetUserDetails,
+    val resetUserPassword: ResetUserPassword,
+    val editUserEmail: EditUserEmail
 )

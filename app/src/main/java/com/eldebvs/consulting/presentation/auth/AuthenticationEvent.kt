@@ -10,4 +10,6 @@ sealed class AuthenticationEvent {
     object ResendVerificationEmail: AuthenticationEvent()
     object SignOutUser: AuthenticationEvent()
     object RefreshAuthState: AuthenticationEvent()
+    object EditUserEmail: AuthenticationEvent()
+    object ResetUserPassword: AuthenticationEvent()
 }

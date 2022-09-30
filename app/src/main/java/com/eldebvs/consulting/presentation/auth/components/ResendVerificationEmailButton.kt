@@ -16,7 +16,7 @@ import com.eldebvs.consulting.R
 
 
 @Composable
-fun ResendEmailButton(
+fun ResendVerificationEmailButton(
     modifier: Modifier = Modifier,
     ResendEmail: () -> Unit
 ) {

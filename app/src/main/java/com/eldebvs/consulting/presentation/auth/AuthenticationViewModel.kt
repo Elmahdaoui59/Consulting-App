@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.eldebvs.consulting.R
 import com.eldebvs.consulting.domain.model.Response
 import com.eldebvs.consulting.domain.use_case.auth_use_case.AuthUseCases
-import com.eldebvs.consulting.domain.use_case.auth_use_case.SignOutUser
 import com.eldebvs.consulting.presentation.navigation.Screen
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
@@ -23,11 +22,42 @@ class AuthenticationViewModel @Inject constructor(
     private val _eventFlow = MutableSharedFlow<UiEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
 
+    init {
+        getAuthState()
+    }
+
+    private fun getUserDetails() {
+        authUseCases.getUserDetails()
+    }
+
+    fun setUserDetails(name: String) {
+        viewModelScope.launch {
+            authUseCases.setUserDetails(name).collect { response ->
+                when (response) {
+                    is Response.Failure -> {
+
+                    }
+                    is Response.Success -> {
+
+                        getUserDetails()
+                    }
+                    is Response.Loading -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = true
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 
     private fun getAuthState() {
         viewModelScope.launch {
             authUseCases.getAuthState.invoke().collect { response ->
-                if(response) {
+                if (response) {
                     _eventFlow.emit(UiEvent.Navigate(Screen.SignedInScreen.route))
                 } else {
                     _eventFlow.emit(UiEvent.Navigate(Screen.AuthScreen.route))
@@ -95,7 +125,7 @@ class AuthenticationViewModel @Inject constructor(
                                 isLoading = false,
                             )
                         }
-                        getAuthState()
+
                     }
                     is Response.Loading -> {
                         _uiState.update {
@@ -127,9 +157,8 @@ class AuthenticationViewModel @Inject constructor(
                                 isLoading = false,
                                 email = "",
                                 password = ""
-                                )
+                            )
                         }
-                        getAuthState()
                     }
                     is Response.Loading -> {
                         _uiState.update {
@@ -261,7 +290,84 @@ class AuthenticationViewModel @Inject constructor(
                 signOutUser()
             }
             is AuthenticationEvent.RefreshAuthState -> {
-                getAuthState()
+
+            }
+            is AuthenticationEvent.EditUserEmail -> {
+                editUserEmail()
+            }
+            is AuthenticationEvent.ResetUserPassword -> {
+                resetUserPassword()
+            }
+        }
+    }
+
+    private fun editUserEmail() {
+        viewModelScope.launch {
+            authUseCases.editUserEmail(
+                email = uiState.value.email!!,
+                password = uiState.value.password!!
+            ).collect {response ->
+                when (response) {
+                    is Response.Failure -> {
+                        _uiState.update {
+                            it.copy(
+                                error = response.e.message,
+                                isLoading = false
+                            )
+                        }
+                    }
+                    is Response.Success -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                email = "",
+                                password = ""
+                            )
+                        }
+                        _eventFlow.emit(UiEvent.ShowMessage(R.string.label_successful_registration))
+                    }
+                    is Response.Loading -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = true
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun resetUserPassword() {
+        viewModelScope.launch {
+            authUseCases.resetUserPassword().collect { response ->
+                when (response) {
+                    is Response.Failure -> {
+                        _uiState.update {
+                            it.copy(
+                                error = response.e.message,
+                                isLoading = false
+                            )
+                        }
+                    }
+                    is Response.Success -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                email = "",
+                                password = ""
+                            )
+                        }
+                        _eventFlow.emit(UiEvent.ShowMessage(R.string.label_reset_password_link_send))
+                    }
+                    is Response.Loading -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = true
+                            )
+                        }
+                    }
+                }
             }
         }
     }
@@ -278,6 +384,6 @@ class AuthenticationViewModel @Inject constructor(
 
     sealed class UiEvent() {
         data class ShowMessage(val messLabel: Int) : UiEvent()
-        data class Navigate(val route: String): UiEvent()
+        data class Navigate(val route: String) : UiEvent()
     }
 }
