@@ -10,7 +10,7 @@ interface AuthRepository {
     suspend fun getFirebaseAuthState(): Flow<Boolean>
     suspend fun resendVerificationEmail(email: String, password: String): Flow<Response<Boolean>>
     fun getUserDetails()
-    suspend fun setUserDetails(name: String): Flow<Response<Boolean>>
+    suspend fun editUserDetails(name: String?, phone: String?): Flow<Response<Boolean>>
     suspend fun resetUserPassword(): Flow<Response<Boolean>>
     suspend fun editUserEmail(email: String, password: String): Flow<Response<Boolean>>
 }

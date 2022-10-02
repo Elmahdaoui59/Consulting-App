@@ -6,6 +6,8 @@ import com.eldebvs.consulting.R
 import com.eldebvs.consulting.domain.model.Response
 import com.eldebvs.consulting.domain.use_case.auth_use_case.AuthUseCases
 import com.eldebvs.consulting.presentation.navigation.Screen
+import com.eldebvs.consulting.presentation.settings.SettingsEvent
+import com.eldebvs.consulting.presentation.settings.UserDetails
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -22,35 +24,15 @@ class AuthenticationViewModel @Inject constructor(
     private val _eventFlow = MutableSharedFlow<UiEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
 
+    private val _userDetails = MutableStateFlow(UserDetails())
+    val userDetails = _userDetails.asStateFlow()
+
     init {
         getAuthState()
     }
 
     private fun getUserDetails() {
         authUseCases.getUserDetails()
-    }
-
-    fun setUserDetails(name: String) {
-        viewModelScope.launch {
-            authUseCases.setUserDetails(name).collect { response ->
-                when (response) {
-                    is Response.Failure -> {
-
-                    }
-                    is Response.Success -> {
-
-                        getUserDetails()
-                    }
-                    is Response.Loading -> {
-                        _uiState.update {
-                            it.copy(
-                                isLoading = true
-                            )
-                        }
-                    }
-                }
-            }
-        }
     }
 
 
@@ -218,7 +200,18 @@ class AuthenticationViewModel @Inject constructor(
     private fun dismissError() {
         _uiState.update {
             it.copy(
-                error = null
+                error = null,
+                email = null,
+                password = null,
+                isLoading = false
+            )
+        }
+        _userDetails.update {
+            it.copy(
+                name = null,
+                phone = null,
+                email = null,
+                password = null
             )
         }
     }
@@ -292,21 +285,59 @@ class AuthenticationViewModel @Inject constructor(
             is AuthenticationEvent.RefreshAuthState -> {
 
             }
-            is AuthenticationEvent.EditUserEmail -> {
-                editUserEmail()
-            }
-            is AuthenticationEvent.ResetUserPassword -> {
-                resetUserPassword()
-            }
         }
     }
 
-    private fun editUserEmail() {
+    fun handleSettingEvent(settingsEvent: SettingsEvent) {
+        when (settingsEvent) {
+            is SettingsEvent.NameChanged -> {
+                _userDetails.update {
+                    it.copy(
+                        name = settingsEvent.name
+                    )
+                }
+            }
+            is SettingsEvent.PhoneChanged -> {
+                _userDetails.update {
+                    it.copy(
+                        phone = settingsEvent.phone
+                    )
+                }
+            }
+            is SettingsEvent.EmailChanged -> {
+                _userDetails.update {
+                    it.copy(
+                        email = settingsEvent.email
+                    )
+                }
+            }
+            is SettingsEvent.PasswordChanged -> {
+                _userDetails.update {
+                    it.copy(
+                        password = settingsEvent.password
+                    )
+                }
+            }
+            is SettingsEvent.ResetUserPassword -> {
+                resetUserPassword()
+            }
+            is SettingsEvent.EditUserDetails -> {
+                val name = userDetails.value.name.takeIf { !it.isNullOrEmpty() }
+                val phone = userDetails.value.phone.takeIf { !it.isNullOrEmpty() }
+                editUserDetails(name = name, phone = phone)
+
+                if (!userDetails.value.email.isNullOrEmpty()) {
+                    editUserEmail()
+                }
+            }
+
+        }
+
+    }
+
+    private fun editUserDetails(name: String? = null, phone: String? = null) {
         viewModelScope.launch {
-            authUseCases.editUserEmail(
-                email = uiState.value.email!!,
-                password = uiState.value.password!!
-            ).collect {response ->
+            authUseCases.editUserDetails(name, phone).collect { response ->
                 when (response) {
                     is Response.Failure -> {
                         _uiState.update {
@@ -320,8 +351,58 @@ class AuthenticationViewModel @Inject constructor(
                         _uiState.update {
                             it.copy(
                                 isLoading = false,
-                                email = "",
-                                password = ""
+                            )
+                        }
+                        _userDetails.update {
+                            it.copy(
+                                name = null,
+                                phone = null,
+                                email = null,
+                                password = null
+                            )
+                        }
+                        _eventFlow.emit(UiEvent.ShowMessage(messLabel = R.string.label_user_details_edited_successfully))
+                    }
+                    is Response.Loading -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = true
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    private fun editUserEmail() {
+        viewModelScope.launch {
+            authUseCases.editUserEmail(
+                email = userDetails.value.email!!,
+                password = userDetails.value.password!!
+            ).collect { response ->
+                when (response) {
+                    is Response.Failure -> {
+                        _uiState.update {
+                            it.copy(
+                                error = response.e.message,
+                                isLoading = false
+                            )
+                        }
+                    }
+                    is Response.Success -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                            )
+                        }
+                        _userDetails.update {
+                            it.copy(
+                                name = null,
+                                phone = null,
+                                email = null,
+                                password = null
                             )
                         }
                         _eventFlow.emit(UiEvent.ShowMessage(R.string.label_successful_registration))

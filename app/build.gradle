@@ -76,6 +76,11 @@ dependencies {
     //firebase
     implementation platform('com.google.firebase:firebase-bom:30.4.1')
     implementation 'com.google.firebase:firebase-auth-ktx'
+    //firebase database
+    implementation 'com.google.firebase:firebase-database-ktx'
+
+    //firebase storage
+    implementation 'com.google.firebase:firebase-storage-ktx'
 
     // Compose navigation
     implementation "androidx.compose.material:material-icons-extended:1.2.1"

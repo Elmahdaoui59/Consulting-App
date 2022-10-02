@@ -4,8 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.navOptions
 import com.eldebvs.consulting.presentation.auth.*
+import com.eldebvs.consulting.presentation.settings.SettingAccountScreen
 import com.eldebvs.consulting.presentation.user.SignedInScreen
 
 @Composable

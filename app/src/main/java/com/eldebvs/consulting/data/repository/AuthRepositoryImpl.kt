@@ -2,14 +2,14 @@ package com.eldebvs.consulting.data.repository
 
 import android.net.Uri
 import android.util.Log
-import androidx.compose.ui.res.stringResource
+import com.eldebvs.consulting.data.util.Constants.DATABASE_FIELD_NAME
+import com.eldebvs.consulting.data.util.Constants.DATABASE_FIELD_PHONE
 import com.eldebvs.consulting.domain.model.Response
+import com.eldebvs.consulting.domain.model.User
 import com.eldebvs.consulting.domain.repository.AuthRepository
-import com.google.firebase.auth.AuthCredential
-import com.google.firebase.auth.EmailAuthProvider
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.auth.FirebaseUser
-import com.google.firebase.auth.UserProfileChangeRequest
+import com.eldebvs.consulting.data.util.Constants.DATABASE_USER_NODE
+import com.google.firebase.auth.*
+import com.google.firebase.database.DatabaseReference
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -20,7 +20,8 @@ import javax.inject.Singleton
 
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
-    private val auth: FirebaseAuth
+    private val auth: FirebaseAuth,
+    private val db: DatabaseReference
 ) : AuthRepository {
     override suspend fun registerUser(email: String, password: String): Flow<Response<Boolean>> =
         flow {
@@ -29,6 +30,16 @@ class AuthRepositoryImpl @Inject constructor(
                 auth.createUserWithEmailAndPassword(email, password).await().run {
                     auth.currentUser?.sendEmailVerification()?.await().run {
                         emit(Response.Success(true))
+                        auth.currentUser?.uid?.let {
+                            val user = User(
+                                name = email.substring(0, email.indexOf("@")),
+                                phone = "2",
+                                profile_image = "",
+                                security_level = "2",
+                                user_id = it
+                            )
+                            db.child(DATABASE_USER_NODE).child(it).setValue(user)
+                        }
                     }
                 }
             } catch (e: Exception) {
@@ -115,24 +126,26 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun setUserDetails(name: String): Flow<Response<Boolean>> =
+    override suspend fun editUserDetails(name: String?, phone: String?): Flow<Response<Boolean>> =
         flow {
-            val user: FirebaseUser? = auth.currentUser
-            if (user != null) {
-                try {
-                    val profileUpdates: UserProfileChangeRequest =
-                        UserProfileChangeRequest.Builder()
-                            .setDisplayName(name)
-                            .setPhotoUri(Uri.parse("https://www.sysbunny.com/blog/wp-content/uploads/2019/06/How-Android-App-Development-Boost-Your-Business-Growth-to-the-Next-Level.jpg"))
-                            .build()
-                    user.updateProfile(profileUpdates).await().run {
-                        emit(Response.Success(true))
+            try {
+                auth.currentUser?.uid?.let { uid ->
+                    emit(Response.Loading)
+                    name?.let { name ->
+                        db.child(DATABASE_USER_NODE).child(uid).child(DATABASE_FIELD_NAME)
+                            .setValue(name).await().run {
+                            emit(Response.Success(true))
+                        }
                     }
-                } catch (e: Exception) {
-                    emit(Response.Failure(e))
+                    phone?.let { phone ->
+                        db.child(DATABASE_USER_NODE).child(uid).child(DATABASE_FIELD_PHONE)
+                            .setValue(phone).await().run {
+                            emit(Response.Success(true))
+                        }
+                    }
                 }
-            } else {
-                Log.i("User_Details", "The user is null")
+            } catch (e: Throwable) {
+                emit(Response.Failure(e))
             }
         }
 

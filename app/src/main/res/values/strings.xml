@@ -27,4 +27,8 @@
     <string name="label_reset_password_link_send">A reset link send to your inbox</string>
     <string name="label_reset_your_email">Reset your Email</string>
     <string name="label_save_button_text">Save</string>
+    <string name="label_phone">Phone</string>
+    <string name="label_name">Name</string>
+    <string name="label_password_required_to_change_email">Password required only if you want to change email</string>
+    <string name="label_user_details_edited_successfully">Details updated successfully</string>
 </resources>
