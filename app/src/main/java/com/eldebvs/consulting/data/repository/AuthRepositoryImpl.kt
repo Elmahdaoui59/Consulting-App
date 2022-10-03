@@ -9,7 +9,7 @@ import com.eldebvs.consulting.domain.model.User
 import com.eldebvs.consulting.domain.repository.AuthRepository
 import com.eldebvs.consulting.data.util.Constants.DATABASE_USER_NODE
 import com.google.firebase.auth.*
-import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.*
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -109,20 +109,32 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override fun getUserDetails() {
-        val user: FirebaseUser? = auth.currentUser
-        if (user != null) {
-            val uid: String = user.uid
-            val name: String? = user.displayName
-            val email: String? = user.email
-            val photoUrl: Uri? = user.photoUrl
-            val properties = "uid: " + uid + "\n" +
-                    "name: " + name + "\n" +
-                    "email: " + email + "\n" +
-                    "photoUrl: " + photoUrl
-            Log.i("User_Details \n", properties)
-        } else {
-            Log.i("User_Details", "The user is null")
+    override suspend fun getUserDetails(): Flow<Response<User?>> = callbackFlow {
+        try {
+            trySend(Response.Loading)
+            var user = User()
+            user = user.copy(email = auth.currentUser?.email)
+
+            val query1: Query = db.child(DATABASE_USER_NODE).orderByKey()
+                .equalTo(auth.currentUser?.uid)
+            val eventListener = object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    for (singleSnapshot: DataSnapshot in snapshot.children) {
+                        val data = singleSnapshot.getValue(User::class.java)
+                        user = user.copy(name = data?.name, phone = data?.phone)
+                        trySend(Response.Success(user))
+                        Log.d("Database query ", "Found user $user")
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    trySend(Response.Failure(error.toException()))
+                }
+            }
+            query1.addListenerForSingleValueEvent(eventListener)
+            awaitClose { query1.removeEventListener(eventListener) }
+        } catch (e: Throwable) {
+            trySend(Response.Failure(e))
         }
     }
 
@@ -134,14 +146,14 @@ class AuthRepositoryImpl @Inject constructor(
                     name?.let { name ->
                         db.child(DATABASE_USER_NODE).child(uid).child(DATABASE_FIELD_NAME)
                             .setValue(name).await().run {
-                            emit(Response.Success(true))
-                        }
+                                emit(Response.Success(true))
+                            }
                     }
                     phone?.let { phone ->
                         db.child(DATABASE_USER_NODE).child(uid).child(DATABASE_FIELD_PHONE)
                             .setValue(phone).await().run {
-                            emit(Response.Success(true))
-                        }
+                                emit(Response.Success(true))
+                            }
                     }
                 }
             } catch (e: Throwable) {

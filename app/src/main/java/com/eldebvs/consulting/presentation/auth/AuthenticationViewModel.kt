@@ -29,10 +29,46 @@ class AuthenticationViewModel @Inject constructor(
 
     init {
         getAuthState()
+        getUserDetails()
     }
 
     private fun getUserDetails() {
-        authUseCases.getUserDetails()
+        viewModelScope.launch {
+            authUseCases.getUserDetails().collect {response ->
+                when(response) {
+                    is Response.Failure -> {
+                        _uiState.update {
+                            it.copy(
+                                error = response.e.message,
+                                isLoading = false,
+                            )
+                        }
+                    }
+                    is Response.Loading -> {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = true
+                            )
+                        }
+                    }
+                    is Response.Success -> {
+                        _userDetails.update {
+                            it.copy(
+                                name = response.data?.name,
+                                phone = response.data?.phone,
+                                email = response.data?.email
+                            )
+                        }
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                            )
+                        }
+
+                    }
+                }
+            }
+        }
     }
 
 
