@@ -13,7 +13,8 @@ this is my version of of the app Mitch tabian build on Pluralsight course on 201
 I'm still folowing on the next courses about firebase products as firestore and and cloud messaging, so I'll still continue push my update here.
 for now the three screens I've build are here, one for authentication(registration and signIn), one for account setting and the other as main screen the user see after signing in.
 ##
-![all_screens_consulting_app](https://user-images.githubusercontent.com/107696788/193326618-672c0f46-0962-452d-8241-5634b20cab52.png)
+![all_screens_consulting_app](https://user-images.githubusercontent.com/107696788/193466000-238f3370-cc6c-4874-844b-52af46f429ee.png)
+
 
 
 
