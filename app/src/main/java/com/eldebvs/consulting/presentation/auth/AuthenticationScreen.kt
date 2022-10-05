@@ -7,22 +7,28 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import com.eldebvs.consulting.presentation.auth.components.AuthenticationContent
+import com.eldebvs.consulting.presentation.auth.components.ErrorDialog
 
 
 @Composable
 fun AuthenticationScreen(
-    viewModel: AuthenticationViewModel
+    authViewModel: AuthenticationViewModel
 ) {
 
-    val uiState = viewModel.uiState.collectAsState().value
+    val uiState = authViewModel.uiState.collectAsState().value
 
     MaterialTheme {
-
         AuthenticationContent(
             modifier = Modifier.fillMaxWidth(),
             authenticationState = uiState,
-            handleEvent = viewModel::handleEvent
+            handleEvent = authViewModel::handleEvent
         )
+
+        uiState.error?.let {
+            ErrorDialog(error = it) {
+                authViewModel.handleEvent(AuthenticationEvent.ErrorDismissed)
+            }
+        }
     }
 }
 

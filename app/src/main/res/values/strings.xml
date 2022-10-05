@@ -31,4 +31,5 @@
     <string name="label_name">Name</string>
     <string name="label_password_required_to_change_email">Password required only if you want to change email</string>
     <string name="label_user_details_edited_successfully">Details updated successfully</string>
+    <string name="label_read_storage_permission_required">permission required to be able to upload photo</string>
 </resources>

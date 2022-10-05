@@ -4,7 +4,8 @@ data class UserDetails(
     val name: String? = null,
     val phone: String? = null,
     val email: String? = null,
-    val password: String? = null
+    val password: String? = null,
+    val profile_image: String? = null,
 ) {
     fun isSettingFormValid(): Boolean {
         val checkDetailsChanged: Boolean = (!name.isNullOrEmpty() || !phone.isNullOrEmpty())

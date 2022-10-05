@@ -33,6 +33,9 @@ fun AuthenticationContent(
     }
     Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
 
+        if (authenticationState.isLoading) {
+            CircularProgressIndicator()
+        }
         AuthenticationForm(
             authenticationMode = authenticationState.authenticationMode,
             email = authenticationState.email,

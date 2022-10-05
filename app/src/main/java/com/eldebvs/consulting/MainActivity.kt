@@ -4,30 +4,28 @@ import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
-import com.eldebvs.consulting.presentation.auth.AuthenticationEvent
 import com.eldebvs.consulting.presentation.auth.AuthenticationViewModel
-import com.eldebvs.consulting.presentation.auth.components.AuthenticationErrorDialog
+import com.eldebvs.consulting.presentation.common.UiEvent
 import com.eldebvs.consulting.presentation.navigation.SetupNavGraph
+import com.eldebvs.consulting.presentation.settings.SettingsViewModel
 import com.eldebvs.consulting.ui.theme.ConsultingTheme
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.flow.collectLatest
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
-    lateinit var navController: NavHostController
-    lateinit var authViewModel: AuthenticationViewModel
+    private lateinit var navController: NavHostController
+    private lateinit var authViewModel: AuthenticationViewModel
+    private lateinit var settingsViewModel: SettingsViewModel
+
     override fun onCreate(savedInstanceState: Bundle?) {
 
         super.onCreate(savedInstanceState)
@@ -40,17 +38,16 @@ class MainActivity : ComponentActivity() {
                 ) {
                     navController = rememberNavController()
                     authViewModel = hiltViewModel()
-                    val uiState = authViewModel.uiState.collectAsState().value
-
+                    settingsViewModel = hiltViewModel()
                     SetupNavGraph(
                         navController = navController,
-                        authViewModel = authViewModel
+                        authViewModel = authViewModel,
+                        settingsViewModel = settingsViewModel
                     )
-
                     LaunchedEffect(key1 = true) {
                         authViewModel.eventFlow.collectLatest { event ->
                             when (event) {
-                                is AuthenticationViewModel.UiEvent.ShowMessage -> {
+                                is UiEvent.ShowMessage -> {
                                     Toast.makeText(
                                         this@MainActivity,
                                         getString(event.messLabel),
@@ -58,7 +55,7 @@ class MainActivity : ComponentActivity() {
                                     )
                                         .show()
                                 }
-                                is AuthenticationViewModel.UiEvent.Navigate -> {
+                                is UiEvent.Navigate -> {
                                     val currentScreen = navController.currentDestination
                                     navController.navigate(event.route) {
                                         currentScreen?.route?.let {
@@ -68,27 +65,12 @@ class MainActivity : ComponentActivity() {
                                         }
                                     }
                                 }
+                                else -> {}
                             }
-                        }
-                    }
-
-                    uiState.error?.let {
-                        AuthenticationErrorDialog(error = it) {
-                            authViewModel.handleEvent(AuthenticationEvent.ErrorDismissed)
-                        }
-                    }
-                    if (uiState.isLoading) {
-                        Box(
-                            modifier = Modifier.fillMaxSize(),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            CircularProgressIndicator()
                         }
                     }
                 }
             }
         }
     }
-
-
 }

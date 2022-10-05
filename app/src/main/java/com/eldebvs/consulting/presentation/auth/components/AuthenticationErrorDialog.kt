@@ -10,7 +10,7 @@ import androidx.compose.ui.unit.sp
 import com.eldebvs.consulting.R
 
 @Composable
-fun AuthenticationErrorDialog(
+fun ErrorDialog(
     modifier: Modifier = Modifier,
     error: String,
     onDismissError: () -> Unit
