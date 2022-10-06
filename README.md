@@ -14,6 +14,8 @@ I'm still folowing on the next courses about firebase products as firestore and 
 for now the three screens I've build are here, one for authentication(registration and signIn), one for account setting and the other as main screen the user see after signing in.
 ##
 ![all_screens_consulting_app](https://user-images.githubusercontent.com/107696788/193466000-238f3370-cc6c-4874-844b-52af46f429ee.png)
+![ask_permission_screens](https://user-images.githubusercontent.com/107696788/194165029-45e22e06-b229-4ce0-8dd9-dc5729d74f0d.png)
+
 
 
 
