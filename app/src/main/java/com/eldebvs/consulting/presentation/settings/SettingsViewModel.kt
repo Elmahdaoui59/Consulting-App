@@ -1,6 +1,11 @@
 package com.eldebvs.consulting.presentation.settings
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import android.graphics.ImageDecoder
+import android.net.Uri
+import android.os.Build
+import android.provider.MediaStore
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.eldebvs.consulting.R
 import com.eldebvs.consulting.domain.model.Response
@@ -8,14 +13,20 @@ import com.eldebvs.consulting.domain.use_case.settings_use_case.SettingsUsesCase
 import com.eldebvs.consulting.presentation.common.UiEvent
 import com.eldebvs.consulting.presentation.settings.components.PhotoSource
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val settingsUsesCases: SettingsUsesCases
-) : ViewModel() {
+    private val settingsUsesCases: SettingsUsesCases,
+    application: Application
+) : AndroidViewModel(application) {
+    private val contentResolver by lazy {
+        application.contentResolver
+    }
     private val _userDetails = MutableStateFlow(UserDetails())
     val userDetails = _userDetails.asStateFlow()
 
@@ -214,14 +225,47 @@ class SettingsViewModel @Inject constructor(
 
                 }
             }
-            is SettingsEvent.UploadPhotoFromPhone -> {
-                uploadPhotoFromPhone()
+            is SettingsEvent.GetLocalProfilePhotoUri -> {
+                updateProfilePhotoUri(settingsEvent.uri)
+                viewModelScope.launch {
+                    saveProfileImageInBitmap()
+                }
             }
         }
     }
 
-    private fun uploadPhotoFromPhone() {
+    private fun updateProfilePhotoUri(uri: Uri?) {
+        _userDetails.update {
+            it.copy(
+                profile_photo_uri = uri
+            )
+        }
     }
+
+    private suspend fun saveProfileImageInBitmap() {
+        withContext(Dispatchers.IO) {
+            userDetails.value.profile_photo_uri?.let { uri ->
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                    val source = ImageDecoder.createSource(contentResolver, uri)
+                    _userDetails.update {
+                        it.copy(
+                            profile_photo_bitmap = ImageDecoder.decodeBitmap(source)
+                        )
+                    }
+
+                } else {
+                    _userDetails.update {
+                        it.copy(
+                            profile_photo_bitmap =
+                            MediaStore.Images.Media.getBitmap(contentResolver, uri)
+                        )
+                    }
+
+                }
+            }
+        }
+    }
+
 
     private fun checkReadStoragePermission() {
         viewModelScope.launch {

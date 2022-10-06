@@ -1,5 +1,6 @@
 package com.eldebvs.consulting.presentation.settings
 
+import android.net.Uri
 import com.eldebvs.consulting.presentation.settings.components.PhotoSource
 
 
@@ -14,5 +15,5 @@ sealed class SettingsEvent {
     object ErrorDismissed: SettingsEvent()
     object DismissUploadPhotoDialog: SettingsEvent()
     class UploadOptionChosen(val photoSource: PhotoSource): SettingsEvent()
-    object UploadPhotoFromPhone: SettingsEvent()
+    class GetLocalProfilePhotoUri(val uri: Uri?): SettingsEvent()
 }

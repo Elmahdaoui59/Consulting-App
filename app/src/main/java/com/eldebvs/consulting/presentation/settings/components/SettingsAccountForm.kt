@@ -1,5 +1,6 @@
 package com.eldebvs.consulting.presentation.settings.components
 
+
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -11,13 +12,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.rememberAsyncImagePainter
-import coil.request.ImageRequest
 import com.eldebvs.consulting.R
 import com.eldebvs.consulting.presentation.auth.components.EmailInput
 import com.eldebvs.consulting.presentation.auth.components.PasswordInput
@@ -25,9 +25,7 @@ import com.eldebvs.consulting.presentation.auth.components.ResetPasswordButton
 import com.eldebvs.consulting.presentation.settings.SettingsEvent
 import com.eldebvs.consulting.presentation.settings.SettingsUiState
 import com.eldebvs.consulting.presentation.settings.UserDetails
-import com.google.accompanist.permissions.ExperimentalPermissionsApi
 
-@OptIn(ExperimentalPermissionsApi::class)
 @Composable
 fun SettingAccountForm(
     modifier: Modifier = Modifier,
@@ -65,27 +63,38 @@ fun SettingAccountForm(
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold
                 )
-                val painter = rememberAsyncImagePainter(
-                    model = ImageRequest.Builder(LocalContext.current)
-                        .data(data = userDetails.profile_image)
-                        .apply(block = fun ImageRequest.Builder.() {
-                            crossfade(durationMillis = 1000)
-                            error(R.drawable.baseline_person_24)
-                            placeholder(R.drawable.baseline_person_24)
-                        }).build()
-                )
+//                val painter = rememberAsyncImagePainter(
+//                    model = ImageRequest.Builder(LocalContext.current)
+//                        .data(data = userDetails.profile_image)
+//                        .apply(block = fun ImageRequest.Builder.() {
+//                            crossfade(durationMillis = 1000)
+//                            error(R.drawable.baseline_person_24)
+//                            placeholder(R.drawable.baseline_person_24)
+//                        }).build()
+//                )
                 Spacer(modifier = modifier.height(10.dp))
                 Image(
-                    painter = painter,
-                    contentDescription = "profile image",
+                    bitmap = userDetails.profile_photo_bitmap?.asImageBitmap() ?: ImageBitmap(20,20) ,
+                    contentDescription = "",
                     modifier = Modifier
                         .clip(CircleShape)
                         .size(50.dp)
                         .background(color = Color.Gray)
                         .clickable {
-                           handleSettingsEvent(SettingsEvent.ChangeProfilePhoto)
+                            handleSettingsEvent(SettingsEvent.ChangeProfilePhoto)
                         }
                 )
+//                Image(
+//                    painter = painter,
+//                    contentDescription = "profile image",
+//                    modifier = Modifier
+//                        .clip(CircleShape)
+//                        .size(50.dp)
+//                        .background(color = Color.Gray)
+//                        .clickable {
+//                            launcher.launch("image/*")
+//                        }
+//                )
 
                 Spacer(modifier = modifier.height(10.dp))
                 Card(

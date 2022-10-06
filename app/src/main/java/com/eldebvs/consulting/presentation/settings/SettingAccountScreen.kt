@@ -2,7 +2,8 @@ package com.eldebvs.consulting.presentation.settings
 
 import android.Manifest
 import android.widget.Toast
-import androidx.compose.material.rememberScaffoldState
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -24,7 +25,10 @@ fun SettingAccountScreen(
     val settingsUiState = settingsViewModel.settingsUiState.collectAsState().value
     val handleSettingsEvent = settingsViewModel::handleSettingEvent
     val ctx = LocalContext.current
-    val scaffoldState = rememberScaffoldState()
+    val launcher =
+        rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) {
+            handleSettingsEvent(SettingsEvent.GetLocalProfilePhotoUri(it))
+        }
     val cameraPermissionState = rememberPermissionState(
         permission = Manifest.permission.CAMERA
     ) { isGranted ->
@@ -37,7 +41,7 @@ fun SettingAccountScreen(
         permission = Manifest.permission.READ_EXTERNAL_STORAGE
     ) { isGranted ->
         if (isGranted) {
-            handleSettingsEvent(SettingsEvent.UploadPhotoFromPhone)
+            launcher.launch("image/*")
         } else {
             Toast.makeText(
                 ctx, ctx.getString(R.string.label_read_storage_permission_required),
