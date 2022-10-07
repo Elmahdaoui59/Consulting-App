@@ -1,6 +1,7 @@
 package com.eldebvs.consulting.presentation.settings
 
 import android.Manifest
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -27,6 +28,7 @@ fun SettingAccountScreen(
     val ctx = LocalContext.current
     val launcher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) {
+            Log.d("uri", it.toString())
             handleSettingsEvent(SettingsEvent.GetLocalProfilePhotoUri(it))
         }
     val cameraPermissionState = rememberPermissionState(

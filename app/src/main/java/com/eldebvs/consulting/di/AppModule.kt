@@ -4,7 +4,7 @@ import com.eldebvs.consulting.data.repository.AuthRepositoryImpl
 import com.eldebvs.consulting.data.repository.SettingsRepositoryImpl
 import com.eldebvs.consulting.domain.repository.AuthRepository
 import com.eldebvs.consulting.domain.use_case.auth_use_case.*
-import com.eldebvs.consulting.data.util.Constants.DATABASE_REFERENCE
+import com.eldebvs.consulting.util.Constants.DATABASE_REFERENCE
 import com.eldebvs.consulting.domain.repository.SettingsRepository
 import com.eldebvs.consulting.domain.use_case.settings_use_case.*
 import com.google.firebase.auth.FirebaseAuth

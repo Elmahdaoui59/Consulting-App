@@ -1,7 +1,7 @@
 package com.eldebvs.consulting.data.repository
 
 import android.util.Log
-import com.eldebvs.consulting.data.util.Constants
+import com.eldebvs.consulting.util.Constants
 import com.eldebvs.consulting.domain.model.Response
 import com.eldebvs.consulting.domain.model.User
 import com.eldebvs.consulting.domain.repository.SettingsRepository

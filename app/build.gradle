@@ -103,5 +103,8 @@ dependencies {
     //permissions accompanist
     implementation "com.google.accompanist:accompanist-permissions:0.25.1"
 
+    //work manager
+    implementation "androidx.work:work-runtime-ktx:2.7.1"
+
 
 }

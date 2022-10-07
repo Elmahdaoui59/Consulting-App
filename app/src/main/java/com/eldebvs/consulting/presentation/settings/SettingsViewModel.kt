@@ -7,11 +7,17 @@ import android.os.Build
 import android.provider.MediaStore
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.work.Data
+import androidx.work.OneTimeWorkRequest
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.eldebvs.consulting.R
 import com.eldebvs.consulting.domain.model.Response
 import com.eldebvs.consulting.domain.use_case.settings_use_case.SettingsUsesCases
 import com.eldebvs.consulting.presentation.common.UiEvent
 import com.eldebvs.consulting.presentation.settings.components.PhotoSource
+import com.eldebvs.consulting.presentation.settings.workers.CompressImageWorker
+import com.eldebvs.consulting.util.Constants.KEY_IMAGE_URI
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
@@ -36,10 +42,31 @@ class SettingsViewModel @Inject constructor(
     private val _settingUiState = MutableStateFlow(SettingsUiState())
     val settingsUiState = _settingUiState.asStateFlow()
 
+    private val workManager = WorkManager.getInstance(application)
+
     init {
         // getUserDetails()
     }
 
+    private fun compressImage() {
+        val builder = Data.Builder()
+        userDetails.value.profile_photo_uri?.let {
+            builder.putString(KEY_IMAGE_URI, it.toString())
+        }
+        val imageUri = builder.build()
+        val compressRequest = OneTimeWorkRequestBuilder<CompressImageWorker>()
+            .setInputData(imageUri)
+            .build()
+       try {
+           workManager.enqueue(compressRequest)
+       } catch (e: Exception) {
+           _settingUiState.update {
+               it.copy(
+                   error = e.message
+               )
+           }
+       }
+    }
 
     private fun getUserDetails() {
         viewModelScope.launch {
@@ -228,8 +255,9 @@ class SettingsViewModel @Inject constructor(
             is SettingsEvent.GetLocalProfilePhotoUri -> {
                 updateProfilePhotoUri(settingsEvent.uri)
                 viewModelScope.launch {
-                    saveProfileImageInBitmap()
+                   // saveProfileImageInBitmap()
                 }
+                compressImage()
             }
         }
     }

@@ -1,6 +1,6 @@
 package com.eldebvs.consulting.data.repository
 
-import com.eldebvs.consulting.data.util.Constants.DATABASE_USER_NODE
+import com.eldebvs.consulting.util.Constants.DATABASE_USER_NODE
 import com.eldebvs.consulting.domain.model.Response
 import com.eldebvs.consulting.domain.model.User
 import com.eldebvs.consulting.domain.repository.AuthRepository

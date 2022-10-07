@@ -1,6 +1,11 @@
 package com.eldebvs.consulting.presentation.settings.components
 
 
+import android.content.res.Resources
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.Canvas
+import android.util.Log
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -14,10 +19,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.ContextCompat
+import coil.decode.BitmapFactoryDecoder
 import com.eldebvs.consulting.R
 import com.eldebvs.consulting.presentation.auth.components.EmailInput
 import com.eldebvs.consulting.presentation.auth.components.PasswordInput
@@ -25,6 +33,7 @@ import com.eldebvs.consulting.presentation.auth.components.ResetPasswordButton
 import com.eldebvs.consulting.presentation.settings.SettingsEvent
 import com.eldebvs.consulting.presentation.settings.SettingsUiState
 import com.eldebvs.consulting.presentation.settings.UserDetails
+import java.io.ByteArrayOutputStream
 
 @Composable
 fun SettingAccountForm(
@@ -33,6 +42,7 @@ fun SettingAccountForm(
     userDetails: UserDetails,
     settingsUiState: SettingsUiState,
 ) {
+
 
     if (settingsUiState.showUploadPhotoDialog) {
         UploadPhotoDialog(
@@ -63,18 +73,23 @@ fun SettingAccountForm(
                     fontSize = 24.sp,
                     fontWeight = FontWeight.Bold
                 )
-//                val painter = rememberAsyncImagePainter(
-//                    model = ImageRequest.Builder(LocalContext.current)
-//                        .data(data = userDetails.profile_image)
-//                        .apply(block = fun ImageRequest.Builder.() {
-//                            crossfade(durationMillis = 1000)
-//                            error(R.drawable.baseline_person_24)
-//                            placeholder(R.drawable.baseline_person_24)
-//                        }).build()
-//                )
+
                 Spacer(modifier = modifier.height(10.dp))
+                val ctx = LocalContext.current
+                fun getBitmapFromVectorDrawable(): Bitmap {
+                    val drawable = ContextCompat.getDrawable(ctx, R.drawable.baseline_person_24)
+                    val bitmap = Bitmap.createBitmap(
+                        drawable!!.intrinsicWidth, drawable!!.intrinsicHeight, Bitmap.Config.ARGB_8888
+                    )
+                    val canvas = Canvas(bitmap)
+                    drawable.setBounds(0, 0, canvas.width, canvas.height)
+                    drawable.draw(canvas)
+                    return bitmap
+                }
+
                 Image(
-                    bitmap = userDetails.profile_photo_bitmap?.asImageBitmap() ?: ImageBitmap(20,20) ,
+                    bitmap = userDetails.profile_photo_bitmap?.asImageBitmap()
+                        ?: getBitmapFromVectorDrawable().asImageBitmap(),
                     contentDescription = "",
                     modifier = Modifier
                         .clip(CircleShape)
@@ -84,17 +99,7 @@ fun SettingAccountForm(
                             handleSettingsEvent(SettingsEvent.ChangeProfilePhoto)
                         }
                 )
-//                Image(
-//                    painter = painter,
-//                    contentDescription = "profile image",
-//                    modifier = Modifier
-//                        .clip(CircleShape)
-//                        .size(50.dp)
-//                        .background(color = Color.Gray)
-//                        .clickable {
-//                            launcher.launch("image/*")
-//                        }
-//                )
+
 
                 Spacer(modifier = modifier.height(10.dp))
                 Card(
@@ -159,3 +164,23 @@ fun SettingAccountForm(
         }
     }
 }
+//                val painter = rememberAsyncImagePainter(
+//                    model = ImageRequest.Builder(LocalContext.current)
+//                        .data(data = userDetails.profile_image)
+//                        .apply(block = fun ImageRequest.Builder.() {
+//                            crossfade(durationMillis = 1000)
+//                            error(R.drawable.baseline_person_24)
+//                            placeholder(R.drawable.baseline_person_24)
+//                        }).build()
+//                )
+//                Image(
+//                    painter = painter,
+//                    contentDescription = "profile image",
+//                    modifier = Modifier
+//                        .clip(CircleShape)
+//                        .size(50.dp)
+//                        .background(color = Color.Gray)
+//                        .clickable {
+//                            launcher.launch("image/*")
+//                        }
+//                )
