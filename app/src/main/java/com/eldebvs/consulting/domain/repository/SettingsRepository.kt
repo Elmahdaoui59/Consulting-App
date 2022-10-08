@@ -9,4 +9,5 @@ interface SettingsRepository {
     suspend fun editUserDetails(name: String?, phone: String?): Flow<Response<Boolean>>
     suspend fun editUserEmail(email: String, password: String): Flow<Response<Boolean>>
     suspend fun resetUserPassword(): Flow<Response<Boolean>>
+    suspend fun uploadImageToFirebase(mBytes: ByteArray): Flow<Response<Boolean>>
 }

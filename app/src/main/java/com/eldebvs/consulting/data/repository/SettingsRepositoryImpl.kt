@@ -1,14 +1,21 @@
 package com.eldebvs.consulting.data.repository
 
 import android.util.Log
+import androidx.work.ListenableWorker.Result.Success
 import com.eldebvs.consulting.util.Constants
 import com.eldebvs.consulting.domain.model.Response
 import com.eldebvs.consulting.domain.model.User
 import com.eldebvs.consulting.domain.repository.SettingsRepository
+import com.eldebvs.consulting.util.Constants.DATABASE_FIELD_PROFILE_IMAGE
+import com.eldebvs.consulting.util.Constants.DATABASE_USER_NODE
+import com.eldebvs.consulting.util.Constants.MB
+import com.eldebvs.consulting.util.Constants.MB_THRESHOLD
 import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
+import com.google.firebase.storage.StorageReference
+import com.google.firebase.storage.UploadTask
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -20,9 +27,42 @@ import javax.inject.Singleton
 @Singleton
 class SettingsRepositoryImpl @Inject constructor(
     private val auth: FirebaseAuth,
-    private val db: DatabaseReference
+    private val db: DatabaseReference,
+    private val storage: StorageReference
 ) : SettingsRepository {
 
+
+    override suspend fun uploadImageToFirebase(mBytes: ByteArray): Flow<Response<Boolean>> =
+        flow {
+            try {
+                emit(Response.Loading)
+                val storageReference =
+                    storage.child("images/users/" + auth.currentUser?.uid + "/profile_image")
+                if ((mBytes.size / MB) < MB_THRESHOLD) {
+                    val uploadTask: UploadTask = storageReference.putBytes(mBytes)
+                    uploadTask.await().run {
+                        if (this.task.isSuccessful) {
+                            //no save the download url into the firebase database
+                            this.storage.downloadUrl.await().run {
+                                if (this != null) {
+                                    Log.d("firebase url", this.toString())
+                                    auth.currentUser?.uid?.let {
+                                        db.child(DATABASE_USER_NODE).child(it)
+                                            .child(DATABASE_FIELD_PROFILE_IMAGE)
+                                            .setValue(this.toString())
+                                        emit(Response.Success(true))
+                                    }
+                                } else
+                                    throw Exception("download url null!")
+                            }
+                        } else
+                            throw Exception(this.task.exception)
+                    }
+                }
+            } catch (e: Exception) {
+                emit(Response.Failure(e))
+            }
+        }
 
     override suspend fun editUserEmail(email: String, password: String): Flow<Response<Boolean>> =
         flow {

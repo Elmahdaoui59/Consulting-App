@@ -9,7 +9,8 @@ data class UserDetails(
     val email: String? = null,
     val password: String? = null,
     val profile_photo_uri: Uri? = null,
-    val profile_photo_bitmap: Bitmap? = null
+    val profile_photo_bitmap: Bitmap? = null,
+    val startCompression: Boolean = false
 ) {
     fun isSettingFormValid(): Boolean {
         val checkDetailsChanged: Boolean = (!name.isNullOrEmpty() || !phone.isNullOrEmpty())

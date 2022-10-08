@@ -1,28 +1,20 @@
 package com.eldebvs.consulting.presentation.settings
 
 import android.app.Application
-import android.graphics.ImageDecoder
+import android.graphics.BitmapFactory
 import android.net.Uri
-import android.os.Build
-import android.provider.MediaStore
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.Data
-import androidx.work.OneTimeWorkRequest
-import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.eldebvs.consulting.R
 import com.eldebvs.consulting.domain.model.Response
 import com.eldebvs.consulting.domain.use_case.settings_use_case.SettingsUsesCases
 import com.eldebvs.consulting.presentation.common.UiEvent
 import com.eldebvs.consulting.presentation.settings.components.PhotoSource
-import com.eldebvs.consulting.presentation.settings.workers.CompressImageWorker
-import com.eldebvs.consulting.util.Constants.KEY_IMAGE_URI
+import com.eldebvs.consulting.presentation.settings.workers.getBytesFromBitmap
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 @HiltViewModel
@@ -42,31 +34,12 @@ class SettingsViewModel @Inject constructor(
     private val _settingUiState = MutableStateFlow(SettingsUiState())
     val settingsUiState = _settingUiState.asStateFlow()
 
-    private val workManager = WorkManager.getInstance(application)
-
+    val workManager = WorkManager.getInstance(application)
     init {
         // getUserDetails()
     }
 
-    private fun compressImage() {
-        val builder = Data.Builder()
-        userDetails.value.profile_photo_uri?.let {
-            builder.putString(KEY_IMAGE_URI, it.toString())
-        }
-        val imageUri = builder.build()
-        val compressRequest = OneTimeWorkRequestBuilder<CompressImageWorker>()
-            .setInputData(imageUri)
-            .build()
-       try {
-           workManager.enqueue(compressRequest)
-       } catch (e: Exception) {
-           _settingUiState.update {
-               it.copy(
-                   error = e.message
-               )
-           }
-       }
-    }
+
 
     private fun getUserDetails() {
         viewModelScope.launch {
@@ -254,12 +227,15 @@ class SettingsViewModel @Inject constructor(
             }
             is SettingsEvent.GetLocalProfilePhotoUri -> {
                 updateProfilePhotoUri(settingsEvent.uri)
-                viewModelScope.launch {
-                   // saveProfileImageInBitmap()
-                }
-                compressImage()
+
             }
-        }
+            is SettingsEvent.UploadPhotoToFirebase -> {
+                viewModelScope.launch {
+                    settingsEvent.uri?.let { uploadImageToFirebase(it) }
+                }
+            }
+
+       }
     }
 
     private fun updateProfilePhotoUri(uri: Uri?) {
@@ -268,29 +244,54 @@ class SettingsViewModel @Inject constructor(
                 profile_photo_uri = uri
             )
         }
+        startCompression()
     }
 
-    private suspend fun saveProfileImageInBitmap() {
-        withContext(Dispatchers.IO) {
-            userDetails.value.profile_photo_uri?.let { uri ->
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    val source = ImageDecoder.createSource(contentResolver, uri)
-                    _userDetails.update {
+
+    private suspend fun uploadImageToFirebase(uri: Uri) {
+        val bitmap = BitmapFactory.decodeStream(contentResolver.openInputStream(uri))
+        val bytes = getBytesFromBitmap(bitmap, 90)
+        stopCompression()
+        settingsUsesCases.uploadImage(bytes).collect { response ->
+            when (response) {
+                is Response.Failure -> {
+                    _settingUiState.update {
                         it.copy(
-                            profile_photo_bitmap = ImageDecoder.decodeBitmap(source)
+                            error = response.e.message,
+                            isLoading = false
                         )
                     }
-
-                } else {
-                    _userDetails.update {
+                }
+                is Response.Success -> {
+                    _settingUiState.update {
                         it.copy(
-                            profile_photo_bitmap =
-                            MediaStore.Images.Media.getBitmap(contentResolver, uri)
+                            isLoading = false,
                         )
                     }
 
                 }
+                is Response.Loading -> {
+                    _settingUiState.update {
+                        it.copy(
+                            isLoading = true
+                        )
+                    }
+                }
             }
+        }
+    }
+    private fun stopCompression()  {
+        _userDetails.update {
+            it.copy(
+                startCompression = false
+            )
+        }
+    }
+    private fun startCompression()  {
+        _userDetails.update {
+            it.copy(
+                startCompression = true
+            )
         }
     }
 

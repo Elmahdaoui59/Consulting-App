@@ -25,11 +25,14 @@ fun SettingAccountScreen(
     val userDetails = settingsViewModel.userDetails.collectAsState().value
     val settingsUiState = settingsViewModel.settingsUiState.collectAsState().value
     val handleSettingsEvent = settingsViewModel::handleSettingEvent
+    val workManager = settingsViewModel.workManager
     val ctx = LocalContext.current
+
     val launcher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) {
             Log.d("uri", it.toString())
             handleSettingsEvent(SettingsEvent.GetLocalProfilePhotoUri(it))
+
         }
     val cameraPermissionState = rememberPermissionState(
         permission = Manifest.permission.CAMERA
@@ -39,6 +42,7 @@ fun SettingAccountScreen(
 
         }
     }
+
     val readStoragePermissionState = rememberPermissionState(
         permission = Manifest.permission.READ_EXTERNAL_STORAGE
     ) { isGranted ->

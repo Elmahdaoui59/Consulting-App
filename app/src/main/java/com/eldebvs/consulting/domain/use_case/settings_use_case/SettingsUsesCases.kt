@@ -4,5 +4,6 @@ data class SettingsUsesCases(
     val editUserEmail: EditUserEmail,
     val editUserDetails: EditUserDetails,
     val getUserDetails: GetUserDetails,
-    val resetUserPassword: ResetUserPassword
+    val resetUserPassword: ResetUserPassword,
+    val uploadImage: UploadImage
 )

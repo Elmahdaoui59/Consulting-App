@@ -16,4 +16,6 @@ sealed class SettingsEvent {
     object DismissUploadPhotoDialog: SettingsEvent()
     class UploadOptionChosen(val photoSource: PhotoSource): SettingsEvent()
     class GetLocalProfilePhotoUri(val uri: Uri?): SettingsEvent()
+    class UploadPhotoToFirebase(val uri: Uri?): SettingsEvent()
+
 }

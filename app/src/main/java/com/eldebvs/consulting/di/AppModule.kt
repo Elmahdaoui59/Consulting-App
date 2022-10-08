@@ -12,6 +12,8 @@ import com.google.firebase.auth.ktx.auth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ktx.database
 import com.google.firebase.ktx.Firebase
+import com.google.firebase.storage.FirebaseStorage
+import com.google.firebase.storage.StorageReference
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,6 +24,8 @@ import dagger.hilt.components.SingletonComponent
 object AppModule {
 
 
+    @Provides
+    fun provideFirebaseStorageReference() = FirebaseStorage.getInstance().reference
 
     @Provides
     fun provideFirebaseDatabaseReference() = Firebase
@@ -40,8 +44,9 @@ object AppModule {
     @Provides
     fun provideSettingsRepository(
         auth: FirebaseAuth,
-        db: DatabaseReference
-    ): SettingsRepository = SettingsRepositoryImpl(auth, db)
+        db: DatabaseReference,
+        storageReference: StorageReference
+    ): SettingsRepository = SettingsRepositoryImpl(auth, db, storageReference)
 
     @Provides
     fun provideAuthUseCases(
@@ -62,7 +67,8 @@ object AppModule {
         editUserEmail = EditUserEmail(repository),
         editUserDetails = EditUserDetails(repository),
         getUserDetails = GetUserDetails(repository),
-        resetUserPassword = ResetUserPassword(repository)
+        resetUserPassword = ResetUserPassword(repository),
+        uploadImage = UploadImage(repository)
     )
 
 

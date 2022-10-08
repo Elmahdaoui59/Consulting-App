@@ -27,8 +27,9 @@ class CompressImageWorker(ctx: Context, params: WorkerParameters) : Worker(ctx, 
             val resolver = appContext.contentResolver
             val picture = BitmapFactory.decodeStream(resolver.openInputStream(Uri.parse(resourceUri)))
             val output = compressBitmap(picture)
-            //val outputData = workDataOf(WORKER_OUTPUT to output )
-            Result.success()
+            val outputUri = writeBitmapToFile(appContext,output).toString()
+            val outputData = workDataOf(WORKER_OUTPUT to outputUri)
+            Result.success(outputData)
         } catch (t: Throwable) {
             Log.e(COMPRESS_TAG, "Error compressing image: ${t.message}" )
             Result.Failure()

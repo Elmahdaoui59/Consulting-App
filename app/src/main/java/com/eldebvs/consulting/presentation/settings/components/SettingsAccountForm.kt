@@ -88,8 +88,8 @@ fun SettingAccountForm(
                 }
 
                 Image(
-                    bitmap = userDetails.profile_photo_bitmap?.asImageBitmap()
-                        ?: getBitmapFromVectorDrawable().asImageBitmap(),
+                    bitmap =
+                         getBitmapFromVectorDrawable().asImageBitmap(),
                     contentDescription = "",
                     modifier = Modifier
                         .clip(CircleShape)
