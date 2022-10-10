@@ -1,17 +1,15 @@
 package com.eldebvs.consulting.presentation.settings
 
-import android.app.Application
-import android.graphics.BitmapFactory
 import android.net.Uri
-import androidx.lifecycle.AndroidViewModel
+import android.util.Log
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.work.WorkManager
 import com.eldebvs.consulting.R
 import com.eldebvs.consulting.domain.model.Response
+import com.eldebvs.consulting.domain.use_case.settings_use_case.GetUserDetails
 import com.eldebvs.consulting.domain.use_case.settings_use_case.SettingsUsesCases
 import com.eldebvs.consulting.presentation.common.UiEvent
 import com.eldebvs.consulting.presentation.settings.components.PhotoSource
-import com.eldebvs.consulting.presentation.settings.workers.getBytesFromBitmap
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -20,11 +18,8 @@ import javax.inject.Inject
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val settingsUsesCases: SettingsUsesCases,
-    application: Application
-) : AndroidViewModel(application) {
-    private val contentResolver by lazy {
-        application.contentResolver
-    }
+) : ViewModel() {
+
     private val _userDetails = MutableStateFlow(UserDetails())
     val userDetails = _userDetails.asStateFlow()
 
@@ -34,11 +29,10 @@ class SettingsViewModel @Inject constructor(
     private val _settingUiState = MutableStateFlow(SettingsUiState())
     val settingsUiState = _settingUiState.asStateFlow()
 
-    val workManager = WorkManager.getInstance(application)
-    init {
-        // getUserDetails()
-    }
 
+    init {
+        getUserDetails()
+    }
 
 
     private fun getUserDetails() {
@@ -65,9 +59,11 @@ class SettingsViewModel @Inject constructor(
                             it.copy(
                                 name = response.data?.name,
                                 phone = response.data?.phone,
-                                email = response.data?.email
+                                email = response.data?.email,
+                                profile_photo_firebase_url = response.data?.profile_image
                             )
                         }
+                        Log.d("user details updated", userDetails.value.profile_photo_firebase_url.toString())
                         _settingUiState.update {
                             it.copy(
                                 isLoading = false,
@@ -98,14 +94,7 @@ class SettingsViewModel @Inject constructor(
                                 isLoading = false,
                             )
                         }
-                        _userDetails.update {
-                            it.copy(
-                                name = null,
-                                phone = null,
-                                email = null,
-                                password = null
-                            )
-                        }
+                        //getUserDetails()
                         _eventFlow.emit(UiEvent.ShowMessage(messLabel = R.string.label_user_details_edited_successfully))
                     }
                     is Response.Loading -> {
@@ -226,75 +215,45 @@ class SettingsViewModel @Inject constructor(
                 }
             }
             is SettingsEvent.GetLocalProfilePhotoUri -> {
+                Log.d("uri on viewModel", settingsEvent.uri.toString())
                 updateProfilePhotoUri(settingsEvent.uri)
-
             }
-            is SettingsEvent.UploadPhotoToFirebase -> {
-                viewModelScope.launch {
-                    settingsEvent.uri?.let { uploadImageToFirebase(it) }
-                }
+            is SettingsEvent.EnableCompression -> {
+                enableCompression()
+            }
+            is SettingsEvent.DisableCompression -> {
+                disableCompression()
+            }
+            is SettingsEvent.GetUserDetails -> {
+                getUserDetails()
             }
 
-       }
+        }
     }
 
-    private fun updateProfilePhotoUri(uri: Uri?) {
+    private fun updateProfilePhotoUri(uri: Uri) {
         _userDetails.update {
             it.copy(
                 profile_photo_uri = uri
             )
         }
-        startCompression()
     }
 
-
-    private suspend fun uploadImageToFirebase(uri: Uri) {
-        val bitmap = BitmapFactory.decodeStream(contentResolver.openInputStream(uri))
-        val bytes = getBytesFromBitmap(bitmap, 90)
-        stopCompression()
-        settingsUsesCases.uploadImage(bytes).collect { response ->
-            when (response) {
-                is Response.Failure -> {
-                    _settingUiState.update {
-                        it.copy(
-                            error = response.e.message,
-                            isLoading = false
-                        )
-                    }
-                }
-                is Response.Success -> {
-                    _settingUiState.update {
-                        it.copy(
-                            isLoading = false,
-                        )
-                    }
-
-                }
-                is Response.Loading -> {
-                    _settingUiState.update {
-                        it.copy(
-                            isLoading = true
-                        )
-                    }
-                }
-            }
-        }
-    }
-    private fun stopCompression()  {
+    private fun enableCompression() {
         _userDetails.update {
             it.copy(
-                startCompression = false
-            )
-        }
-    }
-    private fun startCompression()  {
-        _userDetails.update {
-            it.copy(
-                startCompression = true
+                enableCompression = true
             )
         }
     }
 
+    private fun disableCompression() {
+        _userDetails.update {
+            it.copy(
+                enableCompression = false
+            )
+        }
+    }
 
     private fun checkReadStoragePermission() {
         viewModelScope.launch {

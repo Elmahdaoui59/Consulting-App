@@ -6,14 +6,17 @@ import android.graphics.BitmapFactory
 import android.net.Uri
 import android.util.Log
 import androidx.annotation.WorkerThread
+import com.eldebvs.consulting.presentation.settings.workers.WorkerKeys.COMPRESS_TAG
+import com.eldebvs.consulting.presentation.settings.workers.WorkerKeys.OUTPUT_DIR
+import com.eldebvs.consulting.presentation.settings.workers.WorkerKeys.OUTPUT_PATH
 import com.eldebvs.consulting.util.Constants.MB
 import com.eldebvs.consulting.util.Constants.MB_THRESHOLD
-import com.eldebvs.consulting.util.Constants.OUTPUT_PATH
 import java.io.*
+import java.nio.file.Files
 import java.util.*
 
 @WorkerThread
-fun compressBitmap(bitmap: Bitmap): Bitmap {
+fun compressBitmap(bitmap: Bitmap): ByteArray {
     var bytes: ByteArray? = null
     for (i in 1..100) {
         if (i == 100) {
@@ -25,14 +28,45 @@ fun compressBitmap(bitmap: Bitmap): Bitmap {
             "compression in progress: megabytes: (" + (11 - i) + "0%)" + bytes.size / MB + "MB"
         )
         if ((bytes.size / MB) < MB_THRESHOLD) {
-            return getBitmapFromByteArray(bytes)
+            return bytes
         }
     }
     if (bytes != null) {
-        return getBitmapFromByteArray(bytes)
+        return bytes
     }else {
         throw Exception("error compressing image")
     }
+}
+
+
+@Throws(FileNotFoundException::class)
+fun writeBytesToFile(ctx: Context, bytes: ByteArray): Uri {
+        val name = String.format(OUTPUT_PATH, UUID.randomUUID().toString())
+        val outputDir = File(ctx.filesDir, OUTPUT_DIR)
+        if (!outputDir.exists()) {
+            outputDir.mkdirs()
+        }
+        val outputFile = File(outputDir, name)
+        var out: FileOutputStream? = null
+        try {
+            out = FileOutputStream(outputFile)
+            out.use { stream ->
+                stream.write(bytes)
+            }
+        } catch (e: Exception){
+            Log.d("from writeBytesToFile", e.message.toString())
+        } finally {
+            out?.let {
+                try {
+                    it.close()
+                } catch (e: IOException) {
+                    Log.d("from writeBytesToFile", e.message.toString())
+                }
+            }
+        }
+
+        return Uri.fromFile(outputFile)
+
 }
 
 fun getBytesFromBitmap(bitmap: Bitmap, quality: Int): ByteArray {

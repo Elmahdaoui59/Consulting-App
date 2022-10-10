@@ -1,11 +1,10 @@
 package com.eldebvs.consulting.data.repository
 
 import android.util.Log
-import androidx.work.ListenableWorker.Result.Success
-import com.eldebvs.consulting.util.Constants
 import com.eldebvs.consulting.domain.model.Response
 import com.eldebvs.consulting.domain.model.User
 import com.eldebvs.consulting.domain.repository.SettingsRepository
+import com.eldebvs.consulting.util.Constants
 import com.eldebvs.consulting.util.Constants.DATABASE_FIELD_PROFILE_IMAGE
 import com.eldebvs.consulting.util.Constants.DATABASE_USER_NODE
 import com.eldebvs.consulting.util.Constants.MB
@@ -17,6 +16,7 @@ import com.google.firebase.database.*
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.UploadTask
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
@@ -32,37 +32,37 @@ class SettingsRepositoryImpl @Inject constructor(
 ) : SettingsRepository {
 
 
-    override suspend fun uploadImageToFirebase(mBytes: ByteArray): Flow<Response<Boolean>> =
-        flow {
-            try {
-                emit(Response.Loading)
-                val storageReference =
-                    storage.child("images/users/" + auth.currentUser?.uid + "/profile_image")
-                if ((mBytes.size / MB) < MB_THRESHOLD) {
-                    val uploadTask: UploadTask = storageReference.putBytes(mBytes)
-                    uploadTask.await().run {
-                        if (this.task.isSuccessful) {
-                            //no save the download url into the firebase database
-                            this.storage.downloadUrl.await().run {
-                                if (this != null) {
-                                    Log.d("firebase url", this.toString())
-                                    auth.currentUser?.uid?.let {
-                                        db.child(DATABASE_USER_NODE).child(it)
-                                            .child(DATABASE_FIELD_PROFILE_IMAGE)
-                                            .setValue(this.toString())
-                                        emit(Response.Success(true))
-                                    }
-                                } else
-                                    throw Exception("download url null!")
-                            }
-                        } else
-                            throw Exception(this.task.exception)
-                    }
+    override suspend fun uploadImageToFirebase(mBytes: ByteArray): Response<Boolean> {
+        try {
+            val storageReference =
+                storage.child("images/users/" + auth.currentUser?.uid + "/profile_image")
+            if ((mBytes.size / MB) < MB_THRESHOLD) {
+                val uploadTask: UploadTask = storageReference.putBytes(mBytes)
+                uploadTask.await().run {
+                    if (this.task.isSuccessful) {
+                        //now save the download url into the firebase database
+                        this.storage.downloadUrl.await().run {
+                            if (this != null) {
+                                Log.d("firebase url", this.toString())
+                                auth.currentUser?.uid?.let {
+                                    db.child(DATABASE_USER_NODE).child(it)
+                                        .child(DATABASE_FIELD_PROFILE_IMAGE)
+                                        .setValue(this.toString())
+                                }
+                            } else
+                                throw Exception("download url null!")
+                        }
+                    } else
+                        throw Exception(this.task.exception)
                 }
-            } catch (e: Exception) {
-                emit(Response.Failure(e))
+            } else {
+                throw Exception("File too large")
             }
+        } catch (e: Exception) {
+            return Response.Failure(e)
         }
+        return Response.Success(true)
+    }
 
     override suspend fun editUserEmail(email: String, password: String): Flow<Response<Boolean>> =
         flow {
@@ -100,14 +100,19 @@ class SettingsRepositoryImpl @Inject constructor(
             var user = User()
             user = user.copy(email = auth.currentUser?.email)
 
-            val query1: Query = db.child(Constants.DATABASE_USER_NODE).orderByKey()
+            val query1: Query = db.child(DATABASE_USER_NODE).orderByKey()
                 .equalTo(auth.currentUser?.uid)
             val eventListener = object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     for (singleSnapshot: DataSnapshot in snapshot.children) {
                         val data = singleSnapshot.getValue(User::class.java)
-                        user = user.copy(name = data?.name, phone = data?.phone)
-                        trySend(Response.Success(user))
+                        user = user.copy(
+                            name = data?.name,
+                            phone = data?.phone,
+                            profile_image = data?.profile_image
+                        )
+                        this@callbackFlow.trySendBlocking(Response.Success(user))
+                        //trySend(Response.Success(user))
                         Log.d("Database query ", "Found user $user")
                     }
                 }
@@ -116,11 +121,13 @@ class SettingsRepositoryImpl @Inject constructor(
                     trySend(Response.Failure(error.toException()))
                 }
             }
-            query1.addListenerForSingleValueEvent(eventListener)
+            query1.addValueEventListener(eventListener)
             awaitClose { query1.removeEventListener(eventListener) }
         } catch (e: Throwable) {
             trySend(Response.Failure(e))
         }
+
+
     }
 
     override suspend fun editUserDetails(name: String?, phone: String?): Flow<Response<Boolean>> =

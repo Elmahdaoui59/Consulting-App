@@ -8,7 +8,7 @@ object Constants {
     const val DATABASE_REFERENCE = "https://consulting-41036-default-rtdb.europe-west1.firebasedatabase.app/"
     const val MB = 1000000.0
     const val MB_THRESHOLD = 0.5
-    const val KEY_IMAGE_URI = "KEY_IMAGE_URI"
-    const val WORKER_OUTPUT = "WORKER_OUTPUT"
-    const val OUTPUT_PATH = "compress_image_outputs"
+
+    const val UPLOAD_NOTIFICATION_CHANNEL_ID = "upload_channel"
+    const val UPLOAD_NOTIFICATION_CHANNEL_NAME ="profile photo upload"
 }

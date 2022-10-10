@@ -13,7 +13,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.Observer
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
@@ -84,43 +83,6 @@ class MainActivity : ComponentActivity() {
 
                 }
 
-            }
-            val userDetails = settingsViewModel.userDetails.collectAsState().value
-            val workManager = WorkManager.getInstance(application)
-
-            fun compressPhoto() {
-                Log.d("worker", "compression start")
-                val builder = Data.Builder()
-                userDetails.profile_photo_uri?.let {
-                    builder.putString(Constants.KEY_IMAGE_URI, it.toString())
-                }
-                val imageUri = builder.build()
-                val compressRequest = OneTimeWorkRequestBuilder<CompressImageWorker>()
-                    .setInputData(imageUri)
-                    .build()
-                workManager.beginUniqueWork(
-                    "compress",
-                    ExistingWorkPolicy.KEEP,
-                    compressRequest
-                ).enqueue()
-                val workInfo = workManager.getWorkInfosForUniqueWorkLiveData("compress")
-
-                val workObserver = Observer<MutableList<WorkInfo>> {
-                    if (it[0].state.isFinished) {
-                        val outputData = it[0].outputData.getString(Constants.WORKER_OUTPUT)
-                        val uri = Uri.parse(outputData)
-                        settingsViewModel.handleSettingEvent(
-                            SettingsEvent.UploadPhotoToFirebase(
-                                uri
-                            )
-                        )
-                        Log.d("worker output", uri.toString())
-                    }
-                }
-                workInfo.observe(this, workObserver)
-            }
-            if (userDetails.startCompression) {
-                compressPhoto()
             }
         }
     }
