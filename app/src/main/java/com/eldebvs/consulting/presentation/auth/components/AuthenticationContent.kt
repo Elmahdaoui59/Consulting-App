@@ -35,30 +35,28 @@ fun AuthenticationContent(
 
         if (authenticationState.isLoading) {
             CircularProgressIndicator()
-        }
-        AuthenticationForm(
-            authenticationMode = authenticationState.authenticationMode,
-            email = authenticationState.email,
-            password = authenticationState.password,
-            onEmailChanged = {
-                handleEvent(AuthenticationEvent.EmailChanged(it))
-            },
-            onPasswordChanged = {
-                handleEvent(
-                    AuthenticationEvent.PasswordChanged(
-                        it
+        } else {
+
+            AuthenticationForm(
+                authenticationMode = authenticationState.authenticationMode,
+                email = authenticationState.email,
+                password = authenticationState.password,
+                onEmailChanged = {
+                    handleEvent(AuthenticationEvent.EmailChanged(it))
+                },
+                onPasswordChanged = {
+                    handleEvent(
+                        AuthenticationEvent.PasswordChanged(
+                            it
+                        )
                     )
-                )
-            },
-            onToggleAthMode = { handleEvent(AuthenticationEvent.ToggleAuthenticationMode) },
-            passwordSatisfiedRequirement = authenticationState.passwordRequirements,
-            onAuthenticate = { handleEvent(AuthenticationEvent.Authenticate) },
-            enableAuthentication = authenticationState.isFormValid(),
-            onShowResetEmailChanged = { handleEvent(AuthenticationEvent.ToggleResendEmailDialogVisibility) }
-        )
-
-
+                },
+                onToggleAthMode = { handleEvent(AuthenticationEvent.ToggleAuthenticationMode) },
+                passwordSatisfiedRequirement = authenticationState.passwordRequirements,
+                onAuthenticate = { handleEvent(AuthenticationEvent.Authenticate) },
+                enableAuthentication = authenticationState.isFormValid(),
+                onShowResetEmailChanged = { handleEvent(AuthenticationEvent.ToggleResendEmailDialogVisibility) }
+            )
+        }
     }
-
-
 }

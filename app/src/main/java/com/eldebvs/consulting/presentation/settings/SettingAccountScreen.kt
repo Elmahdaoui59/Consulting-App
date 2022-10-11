@@ -5,12 +5,12 @@ import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
-import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.work.*
 import com.eldebvs.consulting.R
 import com.eldebvs.consulting.presentation.auth.components.ErrorDialog
@@ -35,7 +35,18 @@ fun SettingAccountScreen(
     val handleSettingsEvent = settingsViewModel::handleSettingEvent
     val ctx = LocalContext.current
     val workManager = WorkManager.getInstance(ctx.applicationContext)
-
+    val lifecycleOwner = LocalLifecycleOwner.current
+    DisposableEffect(key1 = lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_CREATE) {
+                //handleSettingsEvent(SettingsEvent.GetUserDetails)
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
     if (userDetails.enableCompression) {
         CompressAndUploadPhoto(
             userDetails = userDetails,

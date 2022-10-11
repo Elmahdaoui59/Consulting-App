@@ -7,6 +7,7 @@ import com.eldebvs.consulting.domain.repository.SettingsRepository
 import com.eldebvs.consulting.util.Constants
 import com.eldebvs.consulting.util.Constants.DATABASE_FIELD_PROFILE_IMAGE
 import com.eldebvs.consulting.util.Constants.DATABASE_USER_NODE
+import com.eldebvs.consulting.util.Constants.LISTENER_CANCELED
 import com.eldebvs.consulting.util.Constants.MB
 import com.eldebvs.consulting.util.Constants.MB_THRESHOLD
 import com.google.firebase.auth.AuthCredential
@@ -16,13 +17,13 @@ import com.google.firebase.database.*
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.UploadTask
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.coroutines.cancellation.CancellationException
 
 @Singleton
 class SettingsRepositoryImpl @Inject constructor(
@@ -95,14 +96,16 @@ class SettingsRepositoryImpl @Inject constructor(
         }
 
     override suspend fun getUserDetails(): Flow<Response<User?>> = callbackFlow {
+
+        var eventListener: ValueEventListener? = null
+        var query: Query? = null
         try {
             trySend(Response.Loading)
             var user = User()
             user = user.copy(email = auth.currentUser?.email)
 
-            val query1: Query = db.child(DATABASE_USER_NODE).orderByKey()
-                .equalTo(auth.currentUser?.uid)
-            val eventListener = object : ValueEventListener {
+            query = db.child(DATABASE_USER_NODE).orderByKey().equalTo(auth.currentUser?.uid)
+            eventListener = object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     for (singleSnapshot: DataSnapshot in snapshot.children) {
                         val data = singleSnapshot.getValue(User::class.java)
@@ -111,23 +114,27 @@ class SettingsRepositoryImpl @Inject constructor(
                             phone = data?.phone,
                             profile_image = data?.profile_image
                         )
-                        this@callbackFlow.trySendBlocking(Response.Success(user))
-                        //trySend(Response.Success(user))
+                        //this@callbackFlow.trySendBlocking(Response.Success(user))
+                        trySend(Response.Success(user))
                         Log.d("Database query ", "Found user $user")
                     }
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-                    trySend(Response.Failure(error.toException()))
+                    Log.d("Database error ", error.message)
+                    //trySend(Response.Failure(Exception(LISTENER_CANCELED)))
+                    trySend(Response.Failure(CancellationException()))
                 }
             }
-            query1.addValueEventListener(eventListener)
-            awaitClose { query1.removeEventListener(eventListener) }
+            query.addValueEventListener(eventListener)
         } catch (e: Throwable) {
             trySend(Response.Failure(e))
         }
-
-
+        awaitClose {
+            eventListener?.let {
+                query?.removeEventListener(eventListener)
+            }
+        }
     }
 
     override suspend fun editUserDetails(name: String?, phone: String?): Flow<Response<Boolean>> =
@@ -136,14 +143,14 @@ class SettingsRepositoryImpl @Inject constructor(
                 auth.currentUser?.uid?.let { uid ->
                     emit(Response.Loading)
                     name?.let { name ->
-                        db.child(Constants.DATABASE_USER_NODE).child(uid)
+                        db.child(DATABASE_USER_NODE).child(uid)
                             .child(Constants.DATABASE_FIELD_NAME)
                             .setValue(name).await().run {
                                 emit(Response.Success(true))
                             }
                     }
                     phone?.let { phone ->
-                        db.child(Constants.DATABASE_USER_NODE).child(uid)
+                        db.child(DATABASE_USER_NODE).child(uid)
                             .child(Constants.DATABASE_FIELD_PHONE)
                             .setValue(phone).await().run {
                                 emit(Response.Success(true))

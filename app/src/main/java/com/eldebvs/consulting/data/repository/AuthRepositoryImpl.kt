@@ -9,6 +9,7 @@ import com.google.firebase.auth.EmailAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
@@ -29,16 +30,17 @@ class AuthRepositoryImpl @Inject constructor(
                 emit(Response.Loading)
                 auth.createUserWithEmailAndPassword(email, password).await().run {
                     auth.currentUser?.sendEmailVerification()?.await().run {
-                        emit(Response.Success(true))
                         auth.currentUser?.uid?.let {
                             val user = User(
                                 name = email.substring(0, email.indexOf("@")),
-                                phone = "2",
+                                phone = "",
                                 profile_image = "",
                                 security_level = "2",
                                 user_id = it
                             )
-                            db.child(DATABASE_USER_NODE).child(it).setValue(user)
+                            db.child(DATABASE_USER_NODE).child(it).setValue(user).await().run {
+                                emit(Response.Success(true))
+                            }
                         }
                     }
                 }
@@ -68,6 +70,7 @@ class AuthRepositoryImpl @Inject constructor(
                 auth.signInWithEmailAndPassword(email, password).await().run {
                     this?.let {
                         emit(Response.Success(true))
+                        getFirebaseAuthState()
                     }
                 }
             } catch (e: Exception) {

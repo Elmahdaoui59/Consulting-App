@@ -7,7 +7,7 @@
     <string name="label_sign_Up">Join Now</string>
     <string name="label_email">Email Address</string>
     <string name="label_successful_registration">Verification email send!!, Verify your account to sign In</string>
-    <string name="label_email_verification_request">Please Verify ou email</string>
+    <string name="label_email_verification_request">Please make sure your email is verified,and relaunch the app</string>
     <string name="label_successful_sign_In">You are signed In Successfully!!</string>
     <string name="label_password">Password</string>
     <string name="show_password">Show Password</string>

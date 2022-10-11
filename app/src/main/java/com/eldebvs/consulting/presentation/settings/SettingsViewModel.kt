@@ -10,7 +10,10 @@ import com.eldebvs.consulting.domain.use_case.settings_use_case.GetUserDetails
 import com.eldebvs.consulting.domain.use_case.settings_use_case.SettingsUsesCases
 import com.eldebvs.consulting.presentation.common.UiEvent
 import com.eldebvs.consulting.presentation.settings.components.PhotoSource
+import com.eldebvs.consulting.util.Constants.LISTENER_CANCELED
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellableContinuation
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
@@ -34,17 +37,33 @@ class SettingsViewModel @Inject constructor(
         getUserDetails()
     }
 
-
+    private fun resetUserDetails() {
+        _userDetails.update {
+            it.copy(
+                name = null,
+                phone = null,
+                email = null,
+                password = null,
+                profile_photo_uri = null,
+                enableCompression = false,
+                profile_photo_firebase_url = null,
+            )
+        }
+    }
     private fun getUserDetails() {
         viewModelScope.launch {
             settingsUsesCases.getUserDetails().collect { response ->
                 when (response) {
                     is Response.Failure -> {
-                        _settingUiState.update {
-                            it.copy(
-                                error = response.e.message,
-                                isLoading = false,
-                            )
+                        if (response.e is CancellationException){
+                           resetUserDetails()
+                        }else {
+                            _settingUiState.update {
+                                it.copy(
+                                    error = response.e.message,
+                                    isLoading = false,
+                                )
+                            }
                         }
                     }
                     is Response.Loading -> {
@@ -63,7 +82,6 @@ class SettingsViewModel @Inject constructor(
                                 profile_photo_firebase_url = response.data?.profile_image
                             )
                         }
-                        Log.d("user details updated", userDetails.value.profile_photo_firebase_url.toString())
                         _settingUiState.update {
                             it.copy(
                                 isLoading = false,
@@ -94,7 +112,6 @@ class SettingsViewModel @Inject constructor(
                                 isLoading = false,
                             )
                         }
-                        //getUserDetails()
                         _eventFlow.emit(UiEvent.ShowMessage(messLabel = R.string.label_user_details_edited_successfully))
                     }
                     is Response.Loading -> {
@@ -276,7 +293,6 @@ class SettingsViewModel @Inject constructor(
             )
         }
     }
-
 
     private fun resetUserPassword() {
         viewModelScope.launch {

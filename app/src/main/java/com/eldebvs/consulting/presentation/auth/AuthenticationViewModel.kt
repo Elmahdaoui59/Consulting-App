@@ -23,21 +23,14 @@ class AuthenticationViewModel @Inject constructor(
     private val _eventFlow = MutableSharedFlow<UiEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
 
-
-
-
     init {
         getAuthState()
-
     }
-
-
-
 
     private fun getAuthState() {
         viewModelScope.launch {
             authUseCases.getAuthState.invoke().collect { response ->
-                if (response) {
+                 if (response) {
                     _eventFlow.emit(UiEvent.Navigate(Screen.SignedInScreen.route))
                 } else {
                     _eventFlow.emit(UiEvent.Navigate(Screen.AuthScreen.route))
@@ -54,13 +47,7 @@ class AuthenticationViewModel @Inject constructor(
             ).collect { response ->
                 when (response) {
                     is Response.Success -> {
-                        _uiState.update {
-                            it.copy(
-                                email = "",
-                                password = "",
-                                isLoading = false
-                            )
-                        }
+                       resetAuthState()
                         _eventFlow.emit(UiEvent.ShowMessage(messLabel = R.string.label_successful_registration))
                         toggleAuthenticationMode()
                         signOutUser()
@@ -100,12 +87,7 @@ class AuthenticationViewModel @Inject constructor(
                         }
                     }
                     is Response.Success -> {
-                        _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                            )
-                        }
-
+                       resetAuthState()
                     }
                     is Response.Loading -> {
                         _uiState.update {
@@ -132,13 +114,7 @@ class AuthenticationViewModel @Inject constructor(
                         }
                     }
                     is Response.Success -> {
-                        _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                email = "",
-                                password = ""
-                            )
-                        }
+                      resetAuthState()
                     }
                     is Response.Loading -> {
                         _uiState.update {
@@ -196,15 +172,7 @@ class AuthenticationViewModel @Inject constructor(
     }
 
     private fun dismissError() {
-        _uiState.update {
-            it.copy(
-                error = null,
-                email = null,
-                password = null,
-                isLoading = false
-            )
-        }
-
+       resetAuthState()
     }
 
     private fun resendVerificationEmail(email: String, password: String) {
@@ -227,13 +195,7 @@ class AuthenticationViewModel @Inject constructor(
                         }
                     }
                     is Response.Success -> {
-                        _uiState.update {
-                            it.copy(
-                                isLoading = false,
-                                email = "",
-                                password = ""
-                            )
-                        }
+                       resetAuthState()
                         toggleResendEmailDialogVisibility()
                         _eventFlow.emit(UiEvent.ShowMessage(R.string.label_successful_registration))
                     }
@@ -280,16 +242,27 @@ class AuthenticationViewModel @Inject constructor(
     }
 
 
-
     private fun toggleResendEmailDialogVisibility() {
         _uiState.update {
             it.copy(
+                isLoading = false,
                 showResendEmailDialog = !uiState.value.showResendEmailDialog,
-                email = "",
-                password = ""
+                email = null,
+                password = null,
+                passwordRequirements = emptyList()
             )
         }
     }
-
+    private fun resetAuthState() {
+        _uiState.update {
+            it.copy(
+                isLoading = false,
+                email = null,
+                password = null,
+                passwordRequirements = emptyList(),
+                error = null
+            )
+        }
+    }
 
 }
