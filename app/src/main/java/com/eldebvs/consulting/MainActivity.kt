@@ -32,7 +32,7 @@ import kotlinx.coroutines.flow.collectLatest
 class MainActivity : ComponentActivity() {
     private lateinit var navController: NavHostController
     private lateinit var authViewModel: AuthenticationViewModel
-    private lateinit var settingsViewModel: SettingsViewModel
+
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,11 +47,10 @@ class MainActivity : ComponentActivity() {
                 ) {
                     navController = rememberNavController()
                     authViewModel = hiltViewModel()
-                    settingsViewModel = hiltViewModel()
+
                     SetupNavGraph(
                         navController = navController,
                         authViewModel = authViewModel,
-                        settingsViewModel = settingsViewModel
                     )
 
                 }

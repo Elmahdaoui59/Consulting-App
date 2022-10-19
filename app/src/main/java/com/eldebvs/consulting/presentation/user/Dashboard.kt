@@ -14,7 +14,7 @@ import com.eldebvs.consulting.presentation.user.components.UserTopAppBar
 
 
 @Composable
-fun SignedInScreen(
+fun Dashboard(
     navController: NavController,
     authViewModel: AuthenticationViewModel
 ) {
@@ -27,7 +27,7 @@ fun SignedInScreen(
        }
     ) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(text = "Signed In Screen")
+            Text(text = "Employee Dashboard")
         }
     }
 }

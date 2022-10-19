@@ -49,6 +49,12 @@ class SettingsViewModel @Inject constructor(
                 profile_photo_firebase_url = null,
             )
         }
+        _settingUiState.update {
+            it.copy(
+                error = null,
+                isLoading = false,
+            )
+        }
     }
     private fun getUserDetails() {
         viewModelScope.launch {
@@ -228,7 +234,7 @@ class SettingsViewModel @Inject constructor(
                     checkReadStoragePermission()
                 }
                 if (settingsEvent.photoSource == PhotoSource.CAMERA) {
-
+                    checkCameraPermission()
                 }
             }
             is SettingsEvent.GetLocalProfilePhotoUri -> {
@@ -275,6 +281,11 @@ class SettingsViewModel @Inject constructor(
     private fun checkReadStoragePermission() {
         viewModelScope.launch {
             _eventFlow.emit(UiEvent.CheckReadStoragePermission)
+        }
+    }
+    private fun checkCameraPermission() {
+        viewModelScope.launch {
+            _eventFlow.emit(UiEvent.CheckCameraPermission)
         }
     }
 

@@ -8,13 +8,12 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
+import androidx.core.net.toUri
 import androidx.work.*
 import com.eldebvs.consulting.R
 import com.eldebvs.consulting.presentation.auth.components.ErrorDialog
 import com.eldebvs.consulting.presentation.common.UiEvent
+import com.eldebvs.consulting.presentation.settings.components.CameraFileProvider
 import com.eldebvs.consulting.presentation.settings.components.SettingAccountForm
 import com.eldebvs.consulting.presentation.settings.workers.CleanupWorker
 import com.eldebvs.consulting.presentation.settings.workers.CompressImageWorker
@@ -35,18 +34,6 @@ fun SettingAccountScreen(
     val handleSettingsEvent = settingsViewModel::handleSettingEvent
     val ctx = LocalContext.current
     val workManager = WorkManager.getInstance(ctx.applicationContext)
-    val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(key1 = lifecycleOwner) {
-        val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_CREATE) {
-                //handleSettingsEvent(SettingsEvent.GetUserDetails)
-            }
-        }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose {
-            lifecycleOwner.lifecycle.removeObserver(observer)
-        }
-    }
     if (userDetails.enableCompression) {
         CompressAndUploadPhoto(
             userDetails = userDetails,
@@ -54,7 +41,7 @@ fun SettingAccountScreen(
         )
         handleSettingsEvent(SettingsEvent.DisableCompression)
     }
-    val launcher =
+    val readStorageLauncher =
         rememberLauncherForActivityResult(contract = ActivityResultContracts.GetContent()) {
             Log.d("uri", it.toString())
             it?.let {
@@ -63,12 +50,25 @@ fun SettingAccountScreen(
                 handleSettingsEvent(SettingsEvent.EnableCompression)
             }
         }
+    val cameraLauncher = rememberLauncherForActivityResult(contract = ActivityResultContracts.TakePicture()) {
+        if (it) {
+            handleSettingsEvent(SettingsEvent.GetLocalProfilePhotoUri(CameraFileProvider.uri))
+            handleSettingsEvent(SettingsEvent.EnableCompression)
+        }else {
+            Toast.makeText(ctx, "error saving the picture", Toast.LENGTH_SHORT).show()
+        }
+    }
     val cameraPermissionState = rememberPermissionState(
         permission = Manifest.permission.CAMERA
     ) { isGranted ->
         if (isGranted) {
+            val uri = CameraFileProvider.getImageUri(ctx)
+            cameraLauncher.launch(uri)
         } else {
-
+            Toast.makeText(
+                ctx, "camera permission required to take photo",
+                Toast.LENGTH_LONG
+            ).show()
         }
     }
 
@@ -76,7 +76,7 @@ fun SettingAccountScreen(
         permission = Manifest.permission.READ_EXTERNAL_STORAGE
     ) { isGranted ->
         if (isGranted) {
-            launcher.launch("image/*")
+            readStorageLauncher.launch("image/*")
         } else {
             Toast.makeText(
                 ctx, ctx.getString(R.string.label_read_storage_permission_required),
