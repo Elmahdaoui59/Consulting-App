@@ -5,5 +5,5 @@ import com.eldebvs.consulting.domain.repository.SettingsRepository
 class ResetUserPassword(
     private val repository: SettingsRepository
 ) {
-    suspend operator fun invoke() = repository.resetUserPassword()
+    operator fun invoke() = repository.resetUserPassword()
 }

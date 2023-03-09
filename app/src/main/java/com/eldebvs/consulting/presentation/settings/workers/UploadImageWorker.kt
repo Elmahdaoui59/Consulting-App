@@ -24,7 +24,7 @@ import java.nio.file.Paths
 import kotlin.random.Random
 
 @HiltWorker
-class UploadPhotoWorker @AssistedInject constructor(
+class UploadImageWorker @AssistedInject constructor(
     private val settingsUsesCases: SettingsUsesCases,
     @Assisted private val ctx: Context,
     @Assisted params: WorkerParameters

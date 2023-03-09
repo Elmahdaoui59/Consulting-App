@@ -5,5 +5,5 @@ import com.eldebvs.consulting.domain.repository.AuthRepository
 class SignOutUser(
     private val repository: AuthRepository
 ) {
-    suspend operator fun invoke() = repository.signOutUser()
+    operator fun invoke() = repository.signOutUser()
 }

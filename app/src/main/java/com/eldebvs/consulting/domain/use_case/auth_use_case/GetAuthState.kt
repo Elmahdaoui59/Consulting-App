@@ -5,5 +5,5 @@ import com.eldebvs.consulting.domain.repository.AuthRepository
 class GetAuthState(
     private val repository: AuthRepository
 ) {
-    suspend operator fun invoke() = repository.getFirebaseAuthState()
+    operator fun invoke() = repository.getFirebaseAuthState()
 }

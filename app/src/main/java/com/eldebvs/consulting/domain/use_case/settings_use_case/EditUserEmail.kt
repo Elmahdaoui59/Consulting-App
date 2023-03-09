@@ -5,6 +5,6 @@ import com.eldebvs.consulting.domain.repository.SettingsRepository
 class EditUserEmail(
     private val repository: SettingsRepository
 ) {
-    suspend operator fun invoke(email: String, password: String) =
+    operator fun invoke(email: String, password: String) =
         repository.editUserEmail(email, password)
 }

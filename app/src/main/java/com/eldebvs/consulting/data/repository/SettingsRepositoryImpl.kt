@@ -1,13 +1,20 @@
 package com.eldebvs.consulting.data.repository
 
+import android.content.Context
+import android.net.Uri
 import android.util.Log
+import androidx.work.*
 import com.eldebvs.consulting.domain.model.Response
 import com.eldebvs.consulting.domain.model.User
 import com.eldebvs.consulting.domain.repository.SettingsRepository
+import com.eldebvs.consulting.presentation.settings.workers.CleanupWorker
+import com.eldebvs.consulting.presentation.settings.workers.CompressImageWorker
+import com.eldebvs.consulting.presentation.settings.workers.UploadImageWorker
+import com.eldebvs.consulting.presentation.settings.workers.WorkerKeys
+import com.eldebvs.consulting.presentation.settings.workers.WorkerKeys.KEY_IMAGE_URI
 import com.eldebvs.consulting.util.Constants
 import com.eldebvs.consulting.util.Constants.DATABASE_FIELD_PROFILE_IMAGE
 import com.eldebvs.consulting.util.Constants.DATABASE_USER_NODE
-import com.eldebvs.consulting.util.Constants.LISTENER_CANCELED
 import com.eldebvs.consulting.util.Constants.MB
 import com.eldebvs.consulting.util.Constants.MB_THRESHOLD
 import com.google.firebase.auth.AuthCredential
@@ -29,9 +36,34 @@ import kotlin.coroutines.cancellation.CancellationException
 class SettingsRepositoryImpl @Inject constructor(
     private val auth: FirebaseAuth,
     private val db: DatabaseReference,
-    private val storage: StorageReference
+    private val storage: StorageReference,
+    context: Context
 ) : SettingsRepository {
 
+    private val workManager = WorkManager.getInstance(context)
+    override fun compressAndUploadImage(imageUri: Uri) {
+
+        val inputImage = Data.Builder().putString(KEY_IMAGE_URI, imageUri.toString()).build()
+
+        //construct the upload work request
+        val compressRequest = OneTimeWorkRequestBuilder<CompressImageWorker>().setInputData(inputImage).build()
+
+        //construct the upload work request
+        val uploadRequest = OneTimeWorkRequestBuilder<UploadImageWorker>()
+            .setConstraints(
+                Constraints.Builder().setRequiredNetworkType(
+                    NetworkType.CONNECTED
+                ).build()
+            ).build()
+
+        //construct the clean request
+        val cleanUpRequest = OneTimeWorkRequestBuilder<CleanupWorker>().build()
+        workManager.beginUniqueWork(
+            WorkerKeys.COMPRESS_UNIQUE_WORK_NAME,
+            ExistingWorkPolicy.KEEP,
+            compressRequest
+        ).then(uploadRequest).then(cleanUpRequest).enqueue()
+    }
 
     override suspend fun uploadImageToFirebase(mBytes: ByteArray): Response<Boolean> {
         try {
@@ -65,7 +97,7 @@ class SettingsRepositoryImpl @Inject constructor(
         return Response.Success(true)
     }
 
-    override suspend fun editUserEmail(email: String, password: String): Flow<Response<Boolean>> =
+    override fun editUserEmail(email: String, password: String): Flow<Response<Boolean>> =
         flow {
             try {
 
@@ -95,7 +127,7 @@ class SettingsRepositoryImpl @Inject constructor(
             }
         }
 
-    override suspend fun getUserDetails(): Flow<Response<User?>> = callbackFlow {
+    override fun getUserDetails(): Flow<Response<User?>> = callbackFlow {
 
         var eventListener: ValueEventListener? = null
         var query: Query? = null
@@ -137,7 +169,7 @@ class SettingsRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun editUserDetails(name: String?, phone: String?): Flow<Response<Boolean>> =
+    override fun editUserDetails(name: String?, phone: String?): Flow<Response<Boolean>> =
         flow {
             try {
                 auth.currentUser?.uid?.let { uid ->
@@ -162,7 +194,7 @@ class SettingsRepositoryImpl @Inject constructor(
             }
         }
 
-    override suspend fun resetUserPassword(): Flow<Response<Boolean>> =
+    override fun resetUserPassword(): Flow<Response<Boolean>> =
         flow {
             try {
                 emit(Response.Loading)

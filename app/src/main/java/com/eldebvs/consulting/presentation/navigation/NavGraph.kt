@@ -7,6 +7,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.eldebvs.consulting.presentation.auth.*
 import com.eldebvs.consulting.presentation.chat.ChatScreen
+import com.eldebvs.consulting.presentation.chat.components.ChatSession
 import com.eldebvs.consulting.presentation.settings.SettingAccountScreen
 import com.eldebvs.consulting.presentation.settings.SettingsViewModel
 import com.eldebvs.consulting.presentation.user.Dashboard
@@ -15,6 +16,7 @@ import com.eldebvs.consulting.presentation.user.Dashboard
 fun SetupNavGraph(
     navController: NavHostController,
     authViewModel: AuthenticationViewModel,
+    settingsViewModel: SettingsViewModel
 ) {
     NavHost(
         navController = navController,
@@ -34,14 +36,20 @@ fun SetupNavGraph(
         composable(
             route = Screen.SettingAccountScreen.route
         ) {
-            SettingAccountScreen(settingsViewModel = hiltViewModel())
+            SettingAccountScreen(settingsViewModel)
         }
         composable(
             route = Screen.ChatScreen.route
         ) {
             ChatScreen(
-                chatViewModel = hiltViewModel()
+                chatViewModel = hiltViewModel(),
+                navController = navController
             )
+        }
+        composable(
+            route = Screen.ChatSession.route
+        ) {
+            ChatSession()
         }
     }
 

@@ -5,5 +5,5 @@ import com.eldebvs.consulting.domain.repository.SettingsRepository
 class GetUserDetails(
     private val repository: SettingsRepository
 ) {
-     suspend operator fun invoke() = repository.getUserDetails()
+     operator fun invoke() = repository.getUserDetails()
 }

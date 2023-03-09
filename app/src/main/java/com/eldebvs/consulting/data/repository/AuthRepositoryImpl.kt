@@ -24,7 +24,7 @@ class AuthRepositoryImpl @Inject constructor(
 ) : AuthRepository {
 
 
-    override suspend fun registerUser(email: String, password: String): Flow<Response<Boolean>> =
+    override fun registerUser(email: String, password: String): Flow<Response<Boolean>> =
         flow {
             try {
                 emit(Response.Loading)
@@ -50,7 +50,7 @@ class AuthRepositoryImpl @Inject constructor(
 
         }
 
-    override suspend fun signOutUser(): Flow<Response<Boolean>> =
+    override fun signOutUser(): Flow<Response<Boolean>> =
         flow {
             try {
                 emit(Response.Loading)
@@ -63,7 +63,7 @@ class AuthRepositoryImpl @Inject constructor(
             }
         }
 
-    override suspend fun signInUser(email: String, password: String): Flow<Response<Boolean>> =
+    override fun signInUser(email: String, password: String): Flow<Response<Boolean>> =
         flow {
             try {
                 emit(Response.Loading)
@@ -78,7 +78,7 @@ class AuthRepositoryImpl @Inject constructor(
             }
         }
 
-    override suspend fun getFirebaseAuthState(): Flow<Boolean> = callbackFlow {
+    override fun getFirebaseAuthState(): Flow<Boolean> = callbackFlow {
         val authStateListener = FirebaseAuth.AuthStateListener { authe: FirebaseAuth ->
             trySend(
                 authe.currentUser != null && (authe.currentUser?.isEmailVerified == true)
@@ -90,7 +90,7 @@ class AuthRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun resendVerificationEmail(
+    override fun resendVerificationEmail(
         email: String,
         password: String
     ): Flow<Response<Boolean>> = flow {

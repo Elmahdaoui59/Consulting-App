@@ -5,5 +5,5 @@ import com.eldebvs.consulting.domain.repository.AuthRepository
 class RegisterUser(
     private val repository: AuthRepository
 ) {
-    suspend operator fun invoke(email: String, password:String) = repository.registerUser(email, password)
+    operator fun invoke(email: String, password:String) = repository.registerUser(email, password)
 }

@@ -2,5 +2,9 @@ package com.eldebvs.consulting.presentation.chat
 
 
 data class ChatUiState(
-    val showNewChatRoomDialog: Boolean = false
+    val showCreateChatRoomDialog: Boolean = false,
+    val securityLevel: Int = 0,
+    val chatroomName: String = "",
+    val error: String? = null,
+    val isLoading: Boolean = false
 )

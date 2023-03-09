@@ -144,7 +144,8 @@ fun SettingAccountForm(
 @Composable
 fun ProfilePhoto(
     url: String? = null,
-    handleSettingsEvent: (event: SettingsEvent) -> Unit
+    handleSettingsEvent: (event: SettingsEvent) -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val painter = rememberAsyncImagePainter(
         model = ImageRequest.Builder(LocalContext.current)
@@ -158,7 +159,7 @@ fun ProfilePhoto(
     Image(
         painter = painter,
         contentDescription = "profile image",
-        modifier = Modifier
+        modifier = modifier
             .clip(CircleShape)
             .size(50.dp)
             .background(color = Color.Gray)

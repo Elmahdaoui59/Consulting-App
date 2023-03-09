@@ -6,20 +6,13 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.platform.LocalContext
-import androidx.core.net.toUri
 import androidx.work.*
 import com.eldebvs.consulting.R
-import com.eldebvs.consulting.presentation.auth.components.ErrorDialog
+import com.eldebvs.consulting.presentation.common.ErrorDialog
 import com.eldebvs.consulting.presentation.common.UiEvent
 import com.eldebvs.consulting.presentation.settings.components.CameraFileProvider
 import com.eldebvs.consulting.presentation.settings.components.SettingAccountForm
-import com.eldebvs.consulting.presentation.settings.workers.CleanupWorker
-import com.eldebvs.consulting.presentation.settings.workers.CompressImageWorker
-import com.eldebvs.consulting.presentation.settings.workers.UploadPhotoWorker
-import com.eldebvs.consulting.presentation.settings.workers.WorkerKeys
-import com.eldebvs.consulting.presentation.settings.workers.WorkerKeys.KEY_IMAGE_URI
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.rememberPermissionState
 import kotlinx.coroutines.flow.collectLatest
@@ -33,12 +26,8 @@ fun SettingAccountScreen(
     val settingsUiState = settingsViewModel.settingsUiState.collectAsState().value
     val handleSettingsEvent = settingsViewModel::handleSettingEvent
     val ctx = LocalContext.current
-    val workManager = WorkManager.getInstance(ctx.applicationContext)
     if (userDetails.enableCompression) {
-        CompressAndUploadPhoto(
-            userDetails = userDetails,
-            workManager = workManager,
-        )
+        handleSettingsEvent(SettingsEvent.CompressAndUploadImage)
         handleSettingsEvent(SettingsEvent.DisableCompression)
     }
     val readStorageLauncher =
@@ -117,47 +106,8 @@ fun SettingAccountScreen(
             }
         }
     }
-
-
 }
 
-
-@Composable
-fun CompressAndUploadPhoto(
-    userDetails: UserDetails,
-    workManager: WorkManager,
-) {
-    //get the profile photo from local storage
-    val builder = Data.Builder()
-    val uri = remember(key1 = userDetails) {
-        userDetails.profile_photo_uri
-    }
-    val imageUri = builder.putString(KEY_IMAGE_URI, uri.toString()).build()
-    //construct the compress request
-    val compressRequest = OneTimeWorkRequestBuilder<CompressImageWorker>()
-        .setInputData(imageUri).build()
-
-    //construct the upload work request
-    val uploadRequest = OneTimeWorkRequestBuilder<UploadPhotoWorker>()
-        .setConstraints(
-            Constraints.Builder().setRequiredNetworkType(
-                NetworkType.CONNECTED
-            ).build()
-        ).build()
-    val cleanUpRequest = OneTimeWorkRequestBuilder<CleanupWorker>().build()
-    val workInfo = workManager
-        .getWorkInfosForUniqueWorkLiveData(WorkerKeys.COMPRESS_UNIQUE_WORK_NAME)
-        .observeAsState().value
-
-    workManager.beginUniqueWork(
-        WorkerKeys.COMPRESS_UNIQUE_WORK_NAME,
-        ExistingWorkPolicy.KEEP,
-        compressRequest
-    ).then(uploadRequest).then(cleanUpRequest)
-        .enqueue()
-
-
-}
 
 
 

@@ -19,4 +19,5 @@ sealed class SettingsEvent {
     object EnableCompression: SettingsEvent()
     object DisableCompression: SettingsEvent()
     object GetUserDetails: SettingsEvent()
+    object CompressAndUploadImage: SettingsEvent()
 }

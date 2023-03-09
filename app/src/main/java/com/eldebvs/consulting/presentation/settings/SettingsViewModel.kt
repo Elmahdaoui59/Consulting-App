@@ -32,9 +32,14 @@ class SettingsViewModel @Inject constructor(
     private val _settingUiState = MutableStateFlow(SettingsUiState())
     val settingsUiState = _settingUiState.asStateFlow()
 
-
     init {
         getUserDetails()
+    }
+
+    private fun compressAndUploadImage() {
+        userDetails.value.profile_photo_uri?.let {
+            settingsUsesCases.compressAndUploadImage(imageUri = it)
+        }
     }
 
     private fun resetUserDetails() {
@@ -56,14 +61,15 @@ class SettingsViewModel @Inject constructor(
             )
         }
     }
+
     private fun getUserDetails() {
         viewModelScope.launch {
             settingsUsesCases.getUserDetails().collect { response ->
                 when (response) {
                     is Response.Failure -> {
-                        if (response.e is CancellationException){
-                           resetUserDetails()
-                        }else {
+                        if (response.e is CancellationException) {
+                            resetUserDetails()
+                        } else {
                             _settingUiState.update {
                                 it.copy(
                                     error = response.e.message,
@@ -250,6 +256,9 @@ class SettingsViewModel @Inject constructor(
             is SettingsEvent.GetUserDetails -> {
                 getUserDetails()
             }
+            is SettingsEvent.CompressAndUploadImage -> {
+                compressAndUploadImage()
+            }
 
         }
     }
@@ -283,6 +292,7 @@ class SettingsViewModel @Inject constructor(
             _eventFlow.emit(UiEvent.CheckReadStoragePermission)
         }
     }
+
     private fun checkCameraPermission() {
         viewModelScope.launch {
             _eventFlow.emit(UiEvent.CheckCameraPermission)
@@ -338,5 +348,4 @@ class SettingsViewModel @Inject constructor(
             }
         }
     }
-
 }

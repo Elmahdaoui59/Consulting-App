@@ -1,4 +1,4 @@
-package com.eldebvs.consulting.presentation.auth.components
+package com.eldebvs.consulting.presentation.common
 
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.Text

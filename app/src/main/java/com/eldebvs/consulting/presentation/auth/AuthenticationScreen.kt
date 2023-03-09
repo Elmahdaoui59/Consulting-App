@@ -7,7 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import com.eldebvs.consulting.presentation.auth.components.AuthenticationContent
-import com.eldebvs.consulting.presentation.auth.components.ErrorDialog
+import com.eldebvs.consulting.presentation.common.ErrorDialog
 
 
 @Composable
